@@ -5,6 +5,9 @@ import Home from "./pages/Home";
 import FarmerDashboard from "./pages/FarmerDashboard";
 import TraderDashboard from "./pages/TraderDashboard";
 import ProductDetail from "./pages/ProductDetail";
+import Messages from "./pages/Messages";
+import Orders from "./pages/Orders";
+import OrderDetail from "./pages/OrderDetail";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
@@ -32,6 +35,35 @@ export default function App() {
         element={
           <ProtectedRoute role="trader">
             <TraderDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Messages - accessible to all logged in users */}
+      <Route
+        path="/messages"
+        element={
+          <ProtectedRoute>
+            <Messages />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Orders - accessible to all logged in users */}
+      <Route
+        path="/orders"
+        element={
+          <ProtectedRoute>
+            <Orders />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/orders/:orderId"
+        element={
+          <ProtectedRoute>
+            <OrderDetail />
           </ProtectedRoute>
         }
       />

@@ -3,16 +3,20 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/Navbar";
+import PlaceOrderModal from "../components/PlaceOrderModal";
+import NegotiatePriceModal from "../components/NegotiatePriceModal";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, isLoggedIn } = useAuth();
+  const { user, isLoggedIn, token } = useAuth();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [showNegotiateModal, setShowNegotiateModal] = useState(false);
 
   useEffect(() => {
     async function fetchProduct() {
@@ -159,9 +163,26 @@ export default function ProductDetail() {
                 </div>
 
                 {product.status === "active" && user?.role === "trader" && (
-                  <button className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition text-lg">
-                    Contact Farmer
-                  </button>
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => setShowOrderModal(true)}
+                      className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition text-lg"
+                    >
+                      📦 Place Order
+                    </button>
+                    <button
+                      onClick={() => setShowNegotiateModal(true)}
+                      className="w-full bg-yellow-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-yellow-600 transition text-lg"
+                    >
+                      💰 Negotiate Price
+                    </button>
+                    <button
+                      onClick={handleContactFarmer}
+                      className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition text-lg"
+                    >
+                      💬 Message Farmer
+                    </button>
+                  </div>
                 )}
 
                 {user?.role === "farmer" && product.farmer_id?._id === user.id && (
@@ -174,9 +195,45 @@ export default function ProductDetail() {
               </div>
             </div>
           </div>
+
+          <PlaceOrderModal
+            product={product}
+            isOpen={showOrderModal}
+            onClose={() => setShowOrderModal(false)}
+          />
+
+          <NegotiatePriceModal
+            product={product}
+            isOpen={showNegotiateModal}
+            onClose={() => setShowNegotiateModal(false)}
+          />
         </div>
       </div>
     </>
   );
+
+  async function handleContactFarmer() {
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      // Create or get conversation with farmer
+      const res = await axios.post(
+        `${API_URL}/api/messages/conversation/${product.farmer_id._id}`,
+        { product_id: product._id },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      
+      // Navigate to messages page with conversation selected
+      navigate(`/messages?conversation=${res.data._id}`);
+    } catch (err) {
+      console.error("Contact farmer error:", err);
+      alert("Failed to start conversation. Please try again.");
+    }
+  }
 }
 

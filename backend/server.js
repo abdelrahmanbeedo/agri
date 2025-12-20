@@ -4,6 +4,8 @@ import cors from "cors";
 import authRoutes from "./routes/auth.js";
 import dotenv from "dotenv";
 import productRoutes from "./routes/productRoutes.js";
+import messageRoutes from "./routes/messageRoutes.js";
+import orderRoutes from "./routes/orderRoutes.js";
 
 dotenv.config();
 
@@ -12,6 +14,8 @@ app.use(cors());
 app.use(express.json());
 app.use("/api/products", productRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/messages", messageRoutes);
+app.use("/api/orders", orderRoutes);
 
 // example protected route
 import { requireAuth, requireRole } from "./middleware/auth.js";

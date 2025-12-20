@@ -1,9 +1,33 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useEffect, useState } from "react";
+import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function Navbar() {
-  const { user, isLoggedIn, logout } = useAuth();
+  const { user, isLoggedIn, logout, token } = useAuth();
   const navigate = useNavigate();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (isLoggedIn && token) {
+      fetchUnreadCount();
+      const interval = setInterval(fetchUnreadCount, 30000); // Refresh every 30 seconds
+      return () => clearInterval(interval);
+    }
+  }, [isLoggedIn, token]);
+
+  async function fetchUnreadCount() {
+    try {
+      const res = await axios.get(`${API_URL}/api/messages/unread-count`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUnreadCount(res.data.unread_count || 0);
+    } catch (err) {
+      // Silently fail - user might not have access yet
+    }
+  }
 
   const handleLogout = () => {
     logout();
@@ -39,6 +63,23 @@ export default function Navbar() {
                     My Products
                   </Link>
                 )}
+                <Link
+                  to="/orders"
+                  className="text-gray-700 hover:text-green-600 px-3 py-2 rounded-md text-sm font-medium transition"
+                >
+                  Orders
+                </Link>
+                <Link
+                  to="/messages"
+                  className="text-gray-700 hover:text-green-600 px-3 py-2 rounded-md text-sm font-medium transition relative"
+                >
+                  Messages
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </Link>
                 <div className="flex items-center space-x-3">
                   <span className="text-sm text-gray-600">
                     {user?.name} ({user?.role})
