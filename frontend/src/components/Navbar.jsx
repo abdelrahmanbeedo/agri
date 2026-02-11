@@ -10,14 +10,6 @@ export default function Navbar() {
   const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
 
-  useEffect(() => {
-    if (isLoggedIn && token) {
-      fetchUnreadCount();
-      const interval = setInterval(fetchUnreadCount, 30000); // Refresh every 30 seconds
-      return () => clearInterval(interval);
-    }
-  }, [isLoggedIn, token]);
-
   async function fetchUnreadCount() {
     try {
       const res = await axios.get(`${API_URL}/api/messages/unread-count`, {
@@ -28,6 +20,14 @@ export default function Navbar() {
       // Silently fail - user might not have access yet
     }
   }
+
+  useEffect(() => {
+    if (isLoggedIn && token) {
+      fetchUnreadCount();
+      const interval = setInterval(fetchUnreadCount, 30000); // Refresh every 30 seconds
+      return () => clearInterval(interval);
+    }
+  }, [isLoggedIn, token]);
 
   const handleLogout = () => {
     logout();
@@ -45,6 +45,12 @@ export default function Navbar() {
 
           {/* Navigation Links */}
           <div className="flex items-center space-x-4">
+            <Link
+              to="/classify"
+              className="text-gray-700 hover:text-green-600 px-3 py-2 rounded-md text-sm font-medium transition"
+            >
+              🍌 Classify
+            </Link>
             {isLoggedIn ? (
               <>
                 {user?.role === "trader" && (
