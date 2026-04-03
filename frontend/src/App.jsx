@@ -8,6 +8,7 @@ import ProductDetail from "./pages/ProductDetail";
 import Messages from "./pages/Messages";
 import Orders from "./pages/Orders";
 import OrderDetail from "./pages/OrderDetail";
+import BananaClassifier from "./pages/BananaClassifier";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
@@ -20,6 +21,7 @@ export default function App() {
 
       {/* Public product detail page */}
       <Route path="/products/:id" element={<ProductDetail />} />
+      <Route path="/classify" element={<BananaClassifier />} />
 
       <Route
         path="/farmer"
