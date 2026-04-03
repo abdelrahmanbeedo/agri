@@ -3,12 +3,15 @@ import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/Navbar";
 import { Link } from "react-router-dom";
+import { Plus, Package, Trash2, ExternalLink, AlertCircle } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-export default function FarmerDashboard() {
-  const { user, token, logout } = useAuth();
+const CATEGORIES = ["Vegetables", "Fruits", "Grains", "Dairy", "Livestock", "Other"];
+const UNITS = ["kg", "ton", "crate", "piece", "bag", "liter", "dozen"];
 
+export default function FarmerDashboard() {
+  const { token } = useAuth();
   const [products, setProducts] = useState([]);
   const [formData, setFormData] = useState({
     title: "",
@@ -20,6 +23,7 @@ export default function FarmerDashboard() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [formExpanded, setFormExpanded] = useState(false);
 
   async function fetchProducts() {
     try {
@@ -29,7 +33,7 @@ export default function FarmerDashboard() {
       setProducts(res.data);
     } catch (err) {
       console.error("Product fetch error:", err);
-      setError("Failed to load products. Please refresh the page.");
+      setError("Failed to load products.");
     }
   }
 
@@ -44,7 +48,6 @@ export default function FarmerDashboard() {
     setError("");
     setLoading(true);
 
-    // Validation
     if (!formData.title || !formData.price_per_unit || !formData.quantity || !formData.category || !formData.unit) {
       setError("Please fill in all required fields.");
       setLoading(false);
@@ -82,10 +85,11 @@ export default function FarmerDashboard() {
         unit: "kg",
         description: "",
       });
+      setFormExpanded(false);
       setError("");
     } catch (err) {
       console.error("Product creation error:", err.response?.data || err.message);
-      setError(err.response?.data?.msg || "Could not create product. Please try again.");
+      setError(err.response?.data?.msg || "Could not create product.");
     } finally {
       setLoading(false);
     }
@@ -103,177 +107,231 @@ export default function FarmerDashboard() {
       setProducts(products.filter(p => p._id !== productId));
     } catch (err) {
       console.error("Delete error:", err);
-      alert("Failed to delete product. Please try again.");
+      alert("Failed to delete product.");
     }
   }
 
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Farmer Dashboard</h1>
-            <p className="text-gray-600">Welcome, {user?.name}. Manage your product listings.</p>
-          </div>
-
-          {/* ADD PRODUCT */}
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-3">Add Product</h2>
-
-        {error && (
-          <div className="mb-3 p-2 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleAddProduct} className="space-y-3">
-          <input
-            type="text"
-            placeholder="Product title *"
-            className="w-full border p-2 rounded"
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            required
-          />
-
-          <div className="grid grid-cols-2 gap-3">
-            <input
-              type="number"
-              step="0.01"
-              placeholder="Price per unit (EGP) *"
-              className="w-full border p-2 rounded"
-              value={formData.price_per_unit}
-              onChange={(e) => setFormData({ ...formData, price_per_unit: e.target.value })}
-              required
-              min="0"
-            />
-
-            <input
-              type="number"
-              placeholder="Quantity *"
-              className="w-full border p-2 rounded"
-              value={formData.quantity}
-              onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-              required
-              min="1"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <input
-              type="text"
-              placeholder="Category * (e.g., Vegetables, Fruits)"
-              className="w-full border p-2 rounded"
-              value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              required
-            />
-
-            <select
-              className="w-full border p-2 rounded"
-              value={formData.unit}
-              onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-              required
+      <div className="min-h-screen bg-earth-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="text-2xl font-bold text-sage-900">My Products</h1>
+              <p className="text-sage-600 mt-1">Manage your product listings</p>
+            </div>
+            <button
+              onClick={() => setFormExpanded(!formExpanded)}
+              className="flex items-center gap-2 px-5 py-2.5 bg-sage-600 text-white rounded-xl font-medium hover:bg-sage-700 transition-colors shadow-lg shadow-sage-600/20"
             >
-              <option value="kg">kg</option>
-              <option value="ton">ton</option>
-              <option value="crate">crate</option>
-              <option value="piece">piece</option>
-              <option value="bag">bag</option>
-            </select>
+              <Plus className="w-5 h-5" />
+              Add Product
+            </button>
           </div>
 
-          <textarea
-            placeholder="Description (optional)"
-            className="w-full border p-2 rounded"
-            rows="3"
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          />
+          {formExpanded && (
+            <div className="bg-white rounded-2xl border border-sage-100 p-6 mb-6 shadow-soft">
+              <h2 className="text-lg font-semibold text-sage-900 mb-5">Add New Product</h2>
 
-          <button 
-            className="bg-green-600 text-white px-4 py-2 rounded w-full hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={loading}
-          >
-            {loading ? "Adding Product..." : "Add Product"}
-          </button>
-        </form>
-      </div>
+              {error && (
+                <div className="mb-5 p-3 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {error}
+                </div>
+              )}
 
-          {/* DISPLAY PRODUCTS */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold">Your Listings</h2>
-              <span className="text-sm text-gray-600">
+              <form onSubmit={handleAddProduct} className="space-y-5">
+                <div>
+                  <label className="block text-sm font-medium text-sage-700 mb-2">
+                    Product Title <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g., Fresh Tomatoes"
+                    className="w-full px-4 py-3 border border-sage-200 rounded-xl text-sage-900 placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-sage-700 mb-2">
+                      Price per Unit (EGP) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      className="w-full px-4 py-3 border border-sage-200 rounded-xl text-sage-900 placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+                      value={formData.price_per_unit}
+                      onChange={(e) => setFormData({ ...formData, price_per_unit: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-sage-700 mb-2">
+                      Quantity <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      placeholder="0"
+                      className="w-full px-4 py-3 border border-sage-200 rounded-xl text-sage-900 placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+                      value={formData.quantity}
+                      onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-sage-700 mb-2">
+                      Unit <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      className="w-full px-4 py-3 border border-sage-200 rounded-xl text-sage-900 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+                      value={formData.unit}
+                      onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                      required
+                    >
+                      {UNITS.map(unit => (
+                        <option key={unit} value={unit}>{unit}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-sage-700 mb-2">
+                    Category <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    className="w-full px-4 py-3 border border-sage-200 rounded-xl text-sage-900 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    required
+                  >
+                    <option value="">Select a category</option>
+                    {CATEGORIES.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-sage-700 mb-2">
+                    Description (optional)
+                  </label>
+                  <textarea
+                    placeholder="Add details about your product..."
+                    rows="3"
+                    className="w-full px-4 py-3 border border-sage-200 rounded-xl text-sage-900 placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent resize-none"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setFormExpanded(false)}
+                    className="px-6 py-3 border border-sage-200 text-sage-700 rounded-xl font-medium hover:bg-sage-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-6 py-3 bg-sage-600 text-white rounded-xl font-medium hover:bg-sage-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {loading ? "Adding..." : "Add Product"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          <div className="bg-white rounded-2xl border border-sage-100 shadow-soft">
+            <div className="px-6 py-4 border-b border-sage-100 flex items-center justify-between">
+              <h2 className="font-semibold text-sage-900">Your Listings</h2>
+              <span className="text-sm text-sage-500">
                 {products.length} {products.length === 1 ? "product" : "products"}
               </span>
             </div>
 
             {products.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">🌾</div>
-                <p className="text-gray-500 text-lg mb-2">You haven't posted any products yet.</p>
-                <p className="text-gray-400 text-sm">Add your first product above to get started!</p>
+              <div className="p-12 text-center">
+                <div className="w-16 h-16 bg-sage-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Package className="w-8 h-8 text-sage-400" />
+                </div>
+                <h3 className="text-lg font-medium text-sage-900 mb-2">No products yet</h3>
+                <p className="text-sage-500 mb-5">Add your first product to start selling</p>
+                <button
+                  onClick={() => setFormExpanded(true)}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-sage-600 text-white rounded-xl font-medium hover:bg-sage-700 transition-colors"
+                >
+                  <Plus className="w-5 h-5" />
+                  Add Product
+                </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="divide-y divide-sage-100">
                 {products.map((p) => (
-                  <div
-                    key={p._id}
-                    className="border rounded-lg p-4 hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1">
+                  <div key={p._id} className="p-5 hover:bg-sage-50/50 transition-colors">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                      <div className="flex items-start gap-4 flex-1 min-w-0">
+                        <div className="w-16 h-16 bg-sage-100 rounded-xl overflow-hidden shrink-0">
+                          {p.images && p.images.length > 0 ? (
+                            <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package className="w-6 h-6 text-sage-300" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-semibold text-sage-900 truncate">{p.title}</h3>
+                            <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                              p.status === "active" 
+                                ? "bg-sage-100 text-sage-700" 
+                                : "bg-earth-100 text-earth-600"
+                            }`}>
+                              {p.status}
+                            </span>
+                          </div>
+                          <p className="text-sm text-sage-500">{p.category}</p>
+                          <div className="flex items-center gap-4 mt-2 text-sm">
+                            <span className="text-sage-700">
+                              <span className="font-medium text-sage-900">{p.price_per_unit}</span> EGP/{p.unit}
+                            </span>
+                            <span className="text-sage-500">{p.quantity} {p.unit}</span>
+                            <span className="text-sage-500">
+                              Total: <span className="font-medium text-sage-700">{(p.quantity * p.price_per_unit).toLocaleString()} EGP</span>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 sm:shrink-0">
                         <Link
                           to={`/products/${p._id}`}
-                          className="font-semibold text-lg text-gray-900 hover:text-green-600 transition"
+                          className="flex items-center gap-1.5 px-4 py-2 text-sage-700 border border-sage-200 rounded-xl text-sm font-medium hover:bg-sage-50 transition-colors"
                         >
-                          {p.title}
+                          <ExternalLink className="w-4 h-4" />
+                          View
                         </Link>
-                        <p className="text-sm text-gray-500 mt-1 capitalize">{p.category}</p>
+                        <button
+                          onClick={() => handleDeleteProduct(p._id)}
+                          className="flex items-center gap-1.5 px-4 py-2 text-red-600 border border-red-100 rounded-xl text-sm font-medium hover:bg-red-50 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Delete
+                        </button>
                       </div>
-                      <span className={`px-2 py-1 text-xs rounded-full capitalize ${
-                        p.status === "active" 
-                          ? "bg-green-100 text-green-800" 
-                          : p.status === "sold"
-                          ? "bg-gray-100 text-gray-800"
-                          : "bg-red-100 text-red-800"
-                      }`}>
-                        {p.status}
-                      </span>
-                    </div>
-
-                    <div className="space-y-2 mb-4">
-                      <p className="text-sm text-gray-700">
-                        <span className="font-medium">Price:</span> {p.price_per_unit} EGP per {p.unit}
-                      </p>
-                      <p className="text-sm text-gray-700">
-                        <span className="font-medium">Quantity:</span> {p.quantity} {p.unit}
-                      </p>
-                      <p className="text-sm text-gray-700">
-                        <span className="font-medium">Total Value:</span>{" "}
-                        {(p.quantity * p.price_per_unit).toLocaleString()} EGP
-                      </p>
-                      {p.description && (
-                        <p className="text-sm text-gray-500 line-clamp-2">{p.description}</p>
-                      )}
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Link
-                        to={`/products/${p._id}`}
-                        className="flex-1 text-center bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm transition"
-                      >
-                        View
-                      </Link>
-                      <button
-                        onClick={() => handleDeleteProduct(p._id)}
-                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 text-sm transition"
-                      >
-                        Delete
-                      </button>
                     </div>
                   </div>
                 ))}

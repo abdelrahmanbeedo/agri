@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
+import { MessageCircle, BadgeDollarSign, Package, MapPin } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -29,106 +30,85 @@ export default function ProductCard({ product }) {
       navigate(`/messages?conversation=${res.data._id}`);
     } catch (err) {
       console.error("Contact farmer error:", err);
-      alert("Failed to start conversation. Please try again.");
+      alert("Failed to start conversation.");
     }
   };
 
   return (
-    <div className="bg-white border rounded-lg shadow-sm hover:shadow-lg transition-shadow overflow-hidden group flex flex-col">
-      <Link
-        to={`/products/${product._id}`}
-        className="flex-1 flex flex-col"
-      >
-      {/* Product Image */}
-      <div className="h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
-        {product.images && product.images.length > 0 ? (
-          <img
-            src={product.images[0]}
-            alt={product.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-        ) : (
-          <div className="text-center text-gray-400">
-            <div className="text-5xl mb-2">🌾</div>
-            <p className="text-sm">No image</p>
-          </div>
-        )}
-      </div>
-
-      {/* Product Info */}
-      <div className="p-4">
-        <div className="flex items-start justify-between mb-2">
-          <h3 className="font-semibold text-lg text-gray-900 group-hover:text-green-600 transition line-clamp-2">
-            {product.title}
-          </h3>
-        </div>
-
-        <p className="text-sm text-gray-500 mb-3 capitalize">{product.category}</p>
-
-        <div className="mb-3">
-          <p className="text-2xl font-bold text-green-600">
-            {product.price_per_unit} EGP
-          </p>
-          <p className="text-xs text-gray-500">per {product.unit}</p>
-        </div>
-
-        <div className="flex items-center justify-between text-sm text-gray-600 mb-3">
-          <span>Available: {product.quantity} {product.unit}</span>
-          {product.farmer_id?.name && (
-            <span className="text-xs">by {product.farmer_id.name}</span>
+    <div className="bg-white rounded-2xl border border-sage-100 overflow-hidden hover:border-sage-200 hover:shadow-soft transition-all group">
+      <Link to={`/products/${product._id}`} className="block">
+        <div className="aspect-[4/3] bg-sage-50 overflow-hidden">
+          {product.images && product.images.length > 0 ? (
+            <img
+              src={product.images[0]}
+              alt={product.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Package className="w-12 h-12 text-sage-300" />
+            </div>
           )}
         </div>
 
-        {product.description && (
-          <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-            {product.description}
-          </p>
-        )}
+        <div className="p-5">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="min-w-0">
+              <h3 className="font-semibold text-sage-900 group-hover:text-sage-700 transition-colors line-clamp-2">
+                {product.title}
+              </h3>
+              <p className="text-sm text-sage-500 mt-1">{product.category}</p>
+            </div>
+            <span className={`shrink-0 px-2.5 py-1 text-xs font-medium rounded-full ${
+              product.status === "active" 
+                ? "bg-sage-100 text-sage-700" 
+                : "bg-earth-100 text-earth-600"
+            }`}>
+              {product.status}
+            </span>
+          </div>
 
-        <div className="flex items-center justify-between mb-3">
-          <span className={`px-2 py-1 text-xs rounded-full capitalize ${
-            product.status === "active" 
-              ? "bg-green-100 text-green-800" 
-              : product.status === "sold"
-              ? "bg-gray-100 text-gray-800"
-              : "bg-red-100 text-red-800"
-          }`}>
-            {product.status}
-          </span>
-          <span className="text-green-600 text-sm font-medium group-hover:underline">
-            View Details →
-          </span>
+          <div className="mb-4">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-2xl font-bold text-sage-900">
+                {product.price_per_unit}
+              </span>
+              <span className="text-sm text-sage-500">EGP/{product.unit}</span>
+            </div>
+            <p className="text-sm text-sage-600 mt-1">
+              {product.quantity} {product.unit} available
+            </p>
+          </div>
+
+          {product.farmer_id?.name && (
+            <div className="flex items-center gap-1.5 text-sm text-sage-500">
+              <MapPin className="w-4 h-4" />
+              <span>{product.farmer_id.name}</span>
+            </div>
+          )}
         </div>
-      </div>
       </Link>
 
-      {/* Action Buttons */}
       {product.status === "active" && user?.role === "trader" && product.farmer_id?._id !== user.id && (
-        <div className="p-4 pt-0 border-t grid grid-cols-3 gap-2">
+        <div className="px-5 pb-5 pt-0 flex gap-2">
           <button
             onClick={handleContactFarmer}
-            className="bg-blue-500 text-white px-2 py-2 rounded text-xs hover:bg-blue-600 transition font-medium"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border border-sage-200 text-sage-700 rounded-xl text-sm font-medium hover:bg-sage-50 hover:border-sage-300 transition-colors"
             title="Message farmer"
           >
-            💬
+            <MessageCircle className="w-4 h-4" />
+            Message
           </button>
           <Link
             to={`/products/${product._id}`}
-            className="bg-yellow-500 text-white px-2 py-2 rounded text-xs hover:bg-yellow-600 transition font-medium text-center"
-            title="Negotiate price"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-sage-600 text-white rounded-xl text-sm font-medium hover:bg-sage-700 transition-colors"
+            title="View and order"
           >
-            💰
-          </Link>
-          <Link
-            to={`/products/${product._id}`}
-            className="bg-green-600 text-white px-2 py-2 rounded text-xs hover:bg-green-700 transition font-medium text-center"
-            title="Place order"
-          >
-            📦
+            <BadgeDollarSign className="w-4 h-4" />
+            Order
           </Link>
         </div>
       )}
     </div>
   );
 }
-

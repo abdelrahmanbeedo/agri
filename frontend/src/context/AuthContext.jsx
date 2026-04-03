@@ -30,11 +30,10 @@ export const AuthProvider = ({ children }) => {
 
   const isLoggedIn = !!token;
 
-  // Set axios defaults
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-  axios.defaults.baseURL = API_URL;
+  useEffect(() => {
+    axios.defaults.baseURL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  }, []);
   
-  // Update authorization header when token changes
   useEffect(() => {
     if (token) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -50,4 +49,5 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext);
