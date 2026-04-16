@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Leaf, MessageSquare, LogOut, User } from "lucide-react";
+import { Leaf, MessageSquare, LogOut, User, Zap } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -11,16 +11,6 @@ export default function Navbar() {
   const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
 
-  async function fetchUnreadCount() {
-    try {
-      const res = await axios.get(`${API_URL}/api/messages/unread-count`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setUnreadCount(res.data.unread_count || 0);
-    } catch (err) {
-      // Silently fail - user might not have access yet
-    }
-  }
   useEffect(() => {
     if (!isLoggedIn || !token) return;
     
@@ -38,14 +28,6 @@ export default function Navbar() {
     loadUnreadCount();
     const interval = setInterval(loadUnreadCount, 30000);
     return () => clearInterval(interval);
-  }, [isLoggedIn, token]);
-
-  useEffect(() => {
-    if (isLoggedIn && token) {
-      fetchUnreadCount();
-      const interval = setInterval(fetchUnreadCount, 30000); // Refresh every 30 seconds
-      return () => clearInterval(interval);
-    }
   }, [isLoggedIn, token]);
 
   const handleLogout = () => {
@@ -110,6 +92,13 @@ export default function Navbar() {
                       {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                   )}
+                </Link>
+                <Link
+                  to="/negotiations"
+                  className="relative p-2 text-sage-700 hover:text-sage-900 hover:bg-sage-50 rounded-lg transition-colors"
+                  title="Negotiations"
+                >
+                  <Zap className="w-5 h-5" />
                 </Link>
                 <div className="flex items-center gap-3 ml-2 pl-4 border-l border-sage-200">
                   <div className="flex items-center gap-2 text-sm text-sage-600">

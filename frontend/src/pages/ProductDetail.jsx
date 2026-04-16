@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/Navbar";
 import PlaceOrderModal from "../components/PlaceOrderModal";
 import NegotiatePriceModal from "../components/NegotiatePriceModal";
-import { ArrowLeft, Package, User, MapPin, ShoppingCart, MessageCircle, BadgeDollarSign } from "lucide-react";
+import { ArrowLeft, Package, User, MapPin, ShoppingCart, MessageCircle, BadgeDollarSign, Zap } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -18,6 +18,7 @@ export default function ProductDetail() {
   const [error, setError] = useState("");
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [showNegotiateModal, setShowNegotiateModal] = useState(false);
+  const [startingNegotiation, setStartingNegotiation] = useState(false);
 
   useEffect(() => {
     async function fetchProduct() {
@@ -55,6 +56,32 @@ export default function ProductDetail() {
     } catch (err) {
       console.error("Contact farmer error:", err);
       alert("Failed to start conversation. Please try again.");
+    }
+  }
+
+  async function handleStartNegotiation() {
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    setStartingNegotiation(true);
+    try {
+      const res = await axios.post(
+        `${API_URL}/api/negotiations`,
+        {
+          product_id: product._id,
+          ask_price: product.price_per_unit,
+          ask_quantity: product.quantity
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      navigate(`/negotiation/${res.data.session_id}`);
+    } catch (err) {
+      console.error("Start negotiation error:", err);
+      alert(err.response?.data?.error || "Failed to start negotiation. You may already have an active negotiation.");
+    } finally {
+      setStartingNegotiation(false);
     }
   }
 
@@ -191,11 +218,12 @@ export default function ProductDetail() {
                       Place Order
                     </button>
                     <button
-                      onClick={() => setShowNegotiateModal(true)}
-                      className="w-full flex items-center justify-center gap-2 bg-honey-500 text-white py-3 rounded-xl font-medium hover:bg-honey-600 transition-colors"
+                      onClick={handleStartNegotiation}
+                      disabled={startingNegotiation}
+                      className="w-full flex items-center justify-center gap-2 bg-honey-500 text-white py-3 rounded-xl font-medium hover:bg-honey-600 transition-colors disabled:opacity-50"
                     >
-                      <BadgeDollarSign className="w-5 h-5" />
-                      Negotiate Price
+                      <Zap className="w-5 h-5" />
+                      {startingNegotiation ? 'Starting...' : 'Formal Negotiation'}
                     </button>
                     <button
                       onClick={handleContactFarmer}

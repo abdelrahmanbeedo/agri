@@ -9,6 +9,8 @@ import Messages from "./pages/Messages";
 import Orders from "./pages/Orders";
 import OrderDetail from "./pages/OrderDetail";
 import BananaClassifier from "./pages/BananaClassifier";
+import NegotiationPage from "./pages/NegotiationPage";
+import NegotiationsList from "./pages/NegotiationsList";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
@@ -66,6 +68,25 @@ export default function App() {
         element={
           <ProtectedRoute>
             <OrderDetail />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Negotiations */}
+      <Route
+        path="/negotiations"
+        element={
+          <ProtectedRoute>
+            <NegotiationsList />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/negotiation/:negotiationId"
+        element={
+          <ProtectedRoute>
+            <NegotiationPage />
           </ProtectedRoute>
         }
       />
