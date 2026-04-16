@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const offerSchema = new mongoose.Schema({
   party: {
@@ -157,4 +157,5 @@ negotiationSchema.methods.generateDealId = function() {
   return `DEAL-${timestamp}-${random}`;
 };
 
-module.exports = mongoose.model('Negotiation', negotiationSchema);
+const Negotiation = mongoose.model('Negotiation', negotiationSchema);
+export default Negotiation;

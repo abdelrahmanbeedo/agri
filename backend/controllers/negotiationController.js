@@ -1,12 +1,12 @@
-const Negotiation = require('../models/Negotiation');
-const Product = require('../models/Product');
-const User = require('../models/User');
-const Order = require('../models/Order');
-const { getMarketData, calculateOfferAnalysis } = require('../utils/marketPrices');
+import Negotiation from '../models/Negotiation.js';
+import Product from '../models/Product.js';
+import User from '../models/User.js';
+import Order from '../models/Order.js';
+import { getMarketData, calculateOfferAnalysis } from '../utils/marketPrices.js';
 
 const BENCHMARK_THRESHOLD = 0.4;
 
-exports.createNegotiation = async (req, res) => {
+export async function createNegotiation(req, res) {
   try {
     const { product_id, ask_price, ask_quantity } = req.body;
     const trader_id = req.user.id;
@@ -90,9 +90,9 @@ exports.createNegotiation = async (req, res) => {
     console.error('Create negotiation error:', error);
     res.status(500).json({ error: 'Failed to create negotiation session' });
   }
-};
+}
 
-exports.getNegotiation = async (req, res) => {
+export async function getNegotiation(req, res) {
   try {
     const { negotiationId } = req.params;
     const userId = req.user.id;
@@ -137,9 +137,9 @@ exports.getNegotiation = async (req, res) => {
     console.error('Get negotiation error:', error);
     res.status(500).json({ error: 'Failed to get negotiation' });
   }
-};
+}
 
-exports.submitOffer = async (req, res) => {
+export async function submitOffer(req, res) {
   try {
     const { negotiationId } = req.params;
     const { 
@@ -237,9 +237,9 @@ exports.submitOffer = async (req, res) => {
     console.error('Submit offer error:', error);
     res.status(500).json({ error: 'Failed to submit offer' });
   }
-};
+}
 
-exports.respondToOffer = async (req, res) => {
+export async function respondToOffer(req, res) {
   try {
     const { negotiationId } = req.params;
     const { action, counter_price, counter_quantity, counter_delivery_date, counter_payment_terms, message } = req.body;
@@ -280,11 +280,11 @@ exports.respondToOffer = async (req, res) => {
       negotiation.early_agreement_bonus = negotiation.current_round <= 2;
       negotiation.deal_id = negotiation.generateDealId();
 
-      await negotiation.updateProductQuantity(lastOffer.quantity);
+      await updateProductQuantity(negotiation.product_id, lastOffer.quantity);
 
       await negotiation.save();
 
-      await this.createOrderFromNegotiation(negotiation, lastOffer);
+      await createOrderFromNegotiation(negotiation, lastOffer);
 
       return res.json({
         success: true,
@@ -367,9 +367,21 @@ exports.respondToOffer = async (req, res) => {
     console.error('Respond to offer error:', error);
     res.status(500).json({ error: 'Failed to respond to offer' });
   }
-};
+}
 
-exports.createOrderFromNegotiation = async (negotiation, finalOffer) => {
+async function updateProductQuantity(productId, orderedQuantity) {
+  const product = await Product.findById(productId);
+  if (product) {
+    product.quantity -= orderedQuantity;
+    if (product.quantity <= 0) {
+      product.status = 'sold';
+      product.quantity = 0;
+    }
+    await product.save();
+  }
+}
+
+async function createOrderFromNegotiation(negotiation, finalOffer) {
   try {
     const order = new Order({
       product_id: negotiation.product_id,
@@ -389,9 +401,9 @@ exports.createOrderFromNegotiation = async (negotiation, finalOffer) => {
     console.error('Create order from negotiation error:', error);
     throw error;
   }
-};
+}
 
-exports.getUserNegotiations = async (req, res) => {
+export async function getUserNegotiations(req, res) {
   try {
     const userId = req.user.id;
     const { status, role } = req.query;
@@ -441,9 +453,9 @@ exports.getUserNegotiations = async (req, res) => {
     console.error('Get user negotiations error:', error);
     res.status(500).json({ error: 'Failed to get negotiations' });
   }
-};
+}
 
-exports.closeNegotiation = async (req, res) => {
+export async function closeNegotiation(req, res) {
   try {
     const { negotiationId } = req.params;
     const { reason } = req.body;
@@ -480,16 +492,4 @@ exports.closeNegotiation = async (req, res) => {
     console.error('Close negotiation error:', error);
     res.status(500).json({ error: 'Failed to close negotiation' });
   }
-};
-
-Negotiation.prototype.updateProductQuantity = async function(orderedQuantity) {
-  const product = await Product.findById(this.product_id);
-  if (product) {
-    product.quantity -= orderedQuantity;
-    if (product.quantity <= 0) {
-      product.status = 'sold';
-      product.quantity = 0;
-    }
-    await product.save();
-  }
-};
+}

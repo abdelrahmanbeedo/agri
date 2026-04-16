@@ -1,25 +1,26 @@
-const express = require('express');
-const router = express.Router();
-const { protect } = require('../middleware/auth');
-const {
+import express from 'express';
+import { requireAuth } from '../middleware/auth.js';
+import {
   createNegotiation,
   getNegotiation,
   submitOffer,
   respondToOffer,
   getUserNegotiations,
   closeNegotiation
-} = require('../controllers/negotiationController');
+} from '../controllers/negotiationController.js';
 
-router.post('/', protect, createNegotiation);
+const router = express.Router();
 
-router.get('/', protect, getUserNegotiations);
+router.post('/', requireAuth, createNegotiation);
 
-router.get('/:negotiationId', protect, getNegotiation);
+router.get('/', requireAuth, getUserNegotiations);
 
-router.post('/:negotiationId/offer', protect, submitOffer);
+router.get('/:negotiationId', requireAuth, getNegotiation);
 
-router.post('/:negotiationId/respond', protect, respondToOffer);
+router.post('/:negotiationId/offer', requireAuth, submitOffer);
 
-router.post('/:negotiationId/close', protect, closeNegotiation);
+router.post('/:negotiationId/respond', requireAuth, respondToOffer);
 
-module.exports = router;
+router.post('/:negotiationId/close', requireAuth, closeNegotiation);
+
+export default router;

@@ -194,7 +194,7 @@ function getTrendColor(trend) {
   }
 }
 
-module.exports = {
+export {
   getMarketData,
   calculateOfferAnalysis,
   getTrendIcon,
