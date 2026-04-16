@@ -4,14 +4,14 @@ import axios from "axios";
 import { useDropzone } from "react-dropzone";
 import { FaCloudUploadAlt, FaSpinner, FaHistory } from "react-icons/fa";
 
+const ML_API_URL = import.meta.env.VITE_ML_API_URL || "http://localhost:8000";
+
 const BananaClassifier = () => {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  const API_URL = "http://localhost:8000/predict"; // Flask API
 
   // Handle file drop
   const onDrop = useCallback((acceptedFiles) => {
@@ -37,7 +37,7 @@ const BananaClassifier = () => {
   // Fetch history
   const fetchHistory = useCallback(async () => {
     try {
-      const response = await axios.get("http://localhost:8000/history");
+      const response = await axios.get(`${ML_API_URL}/history`);
       setHistory(response.data);
     } catch (err) {
       console.error("Failed to fetch history:", err);
@@ -59,7 +59,7 @@ const BananaClassifier = () => {
     formData.append("image", file);
 
     try {
-      const response = await axios.post(API_URL, formData, {
+      const response = await axios.post(`${ML_API_URL}/predict`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setResult(response.data);
