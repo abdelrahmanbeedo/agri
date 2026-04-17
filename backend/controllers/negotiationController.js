@@ -11,6 +11,14 @@ export async function createNegotiation(req, res) {
     const { product_id, ask_price, ask_quantity } = req.body;
     const trader_id = req.user.id;
 
+    if (!trader_id) {
+      return res.status(401).json({ error: 'User not authenticated', details: 'trader_id missing from req.user' });
+    }
+
+    if (!product_id) {
+      return res.status(400).json({ error: 'Product ID is required' });
+    }
+
     const product = await Product.findById(product_id).populate('farmer_id');
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
@@ -30,9 +38,14 @@ export async function createNegotiation(req, res) {
       return res.status(400).json({ error: 'Active negotiation already exists for this product' });
     }
 
-    const marketData = getMarketData(product.category, product.title);
+    let marketData;
+    try {
+      marketData = getMarketData(product.category, product.title);
+    } catch (e) {
+      marketData = { min: 0, max: 100, avg: 50, unit: 'unit', trend: 'stable', trendPercent: 0 };
+    }
 
-    if (ask_price < marketData.min) {
+    if (ask_price && ask_price < (marketData.min || 0)) {
       return res.status(400).json({ 
         error: 'Asking price is below market benchmark',
         warning: true,
@@ -88,7 +101,7 @@ export async function createNegotiation(req, res) {
     });
   } catch (error) {
     console.error('Create negotiation error:', error);
-    res.status(500).json({ error: 'Failed to create negotiation session' });
+    res.status(500).json({ error: 'Failed to create negotiation session', details: error.message });
   }
 }
 
@@ -97,22 +110,44 @@ export async function getNegotiation(req, res) {
     const { negotiationId } = req.params;
     const userId = req.user.id;
 
+    console.log('getNegotiation - negotiationId:', negotiationId, 'userId:', userId);
+
     const negotiation = await Negotiation.findById(negotiationId)
       .populate('farmer_id', 'name email')
       .populate('trader_id', 'name email')
       .populate('product_id');
 
+    console.log('getNegotiation - negotiation found:', negotiation ? 'yes' : 'no');
+    console.log('getNegotiation - status:', negotiation?.status);
+
     if (!negotiation) {
       return res.status(404).json({ error: 'Negotiation not found' });
     }
 
-    if (negotiation.farmer_id._id.toString() !== userId && 
-        negotiation.trader_id._id.toString() !== userId) {
+    const farmerId = negotiation.farmer_id?._id?.toString() || negotiation.farmer_id?.toString();
+    const traderId = negotiation.trader_id?._id?.toString() || negotiation.trader_id?.toString();
+
+    if (farmerId !== userId && traderId !== userId) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    const product = await Product.findById(negotiation.product_id._id);
-    const marketData = getMarketData(product.category, product.title);
+    let product;
+    try {
+      const prodId = negotiation.product_id?._id || negotiation.product_id;
+      product = await Product.findById(prodId);
+    } catch (e) {
+      console.log('Product lookup error:', e.message);
+      product = null;
+    }
+    
+    let marketData;
+    try {
+      const category = product?.category || 'vegetables';
+      const title = product?.title || 'General';
+      marketData = getMarketData(category, title);
+    } catch (e) {
+      marketData = { min: 0, max: 100, avg: 50, unit: 'unit', trend: 'stable', trendPercent: 0 };
+    }
 
     let lastOffer = null;
     if (negotiation.offers.length > 0) {
@@ -131,11 +166,11 @@ export async function getNegotiation(req, res) {
       lastOffer,
       rounds_remaining: negotiation.max_rounds - negotiation.current_round,
       current_turn: negotiation.current_turn,
-      user_role: negotiation.farmer_id._id.toString() === userId ? 'farmer' : 'trader'
+      user_role: farmerId === userId ? 'farmer' : 'trader'
     });
   } catch (error) {
     console.error('Get negotiation error:', error);
-    res.status(500).json({ error: 'Failed to get negotiation' });
+    res.status(500).json({ error: 'Failed to get negotiation', details: error.message });
   }
 }
 
@@ -154,6 +189,10 @@ export async function submitOffer(req, res) {
     } = req.body;
     const userId = req.user.id;
 
+    console.log('submitOffer - negotiationId:', negotiationId);
+    console.log('submitOffer - userId:', userId);
+    console.log('submitOffer - body:', req.body);
+
     const negotiation = await Negotiation.findById(negotiationId)
       .populate('product_id');
 
@@ -165,8 +204,11 @@ export async function submitOffer(req, res) {
       return res.status(400).json({ error: 'Negotiation is not active' });
     }
 
-    const isTrader = negotiation.trader_id.toString() === userId;
-    const isFarmer = negotiation.farmer_id.toString() === userId;
+    const traderId = negotiation.trader_id?._id?.toString() || negotiation.trader_id?.toString();
+    const farmerId = negotiation.farmer_id?._id?.toString() || negotiation.farmer_id?.toString();
+
+    const isTrader = traderId === userId;
+    const isFarmer = farmerId === userId;
 
     if (!isTrader && !isFarmer) {
       return res.status(403).json({ error: 'Access denied' });
@@ -180,12 +222,17 @@ export async function submitOffer(req, res) {
       return res.status(400).json({ error: "Waiting for farmer's response" });
     }
 
-    const marketData = getMarketData(negotiation.product_id.category, negotiation.product_id.title);
+    let marketData;
+    try {
+      marketData = getMarketData(negotiation.product_id?.category || 'vegetables', negotiation.product_id?.title || 'General');
+    } catch (e) {
+      marketData = { min: 0, max: 100, avg: 50, unit: 'unit', trend: 'stable', trendPercent: 0 };
+    }
     const offerAnalysis = calculateOfferAnalysis(
-      price_per_unit,
-      negotiation.farmer_ask_price,
-      marketData.avg,
-      quantity
+      price_per_unit || 0,
+      negotiation.farmer_ask_price || 0,
+      marketData.avg || 0,
+      quantity || 1
     );
 
     if (offerAnalysis.isLowBall && isTrader) {
@@ -200,10 +247,10 @@ export async function submitOffer(req, res) {
 
     const offer = {
       party: userId,
-      price_per_unit: Number(price_per_unit),
-      quantity: Number(quantity),
-      total_value: Number(price_per_unit) * Number(quantity),
-      delivery_date: new Date(delivery_date),
+      price_per_unit: Number(price_per_unit) || 0,
+      quantity: Number(quantity) || 1,
+      total_value: (Number(price_per_unit) || 0) * (Number(quantity) || 1),
+      delivery_date: delivery_date ? new Date(delivery_date) : new Date(),
       delivery_address: delivery_address || '',
       payment_terms: payment_terms || 'cash',
       payment_window_days: payment_window_days || 7,
@@ -235,7 +282,7 @@ export async function submitOffer(req, res) {
     });
   } catch (error) {
     console.error('Submit offer error:', error);
-    res.status(500).json({ error: 'Failed to submit offer' });
+    res.status(500).json({ error: 'Failed to submit offer', details: error.message });
   }
 }
 
@@ -251,7 +298,9 @@ export async function respondToOffer(req, res) {
       return res.status(404).json({ error: 'Negotiation not found' });
     }
 
-    if (negotiation.farmer_id.toString() !== userId) {
+    const farmerId = negotiation.farmer_id?._id?.toString() || negotiation.farmer_id?.toString();
+    
+    if (farmerId !== userId) {
       return res.status(403).json({ error: 'Only the farmer can respond to offers' });
     }
 
@@ -264,7 +313,8 @@ export async function respondToOffer(req, res) {
     }
 
     const lastOffer = negotiation.offers[negotiation.offers.length - 1];
-    if (!lastOffer || lastOffer.party.toString() !== negotiation.trader_id.toString()) {
+    const traderId = negotiation.trader_id?._id?.toString() || negotiation.trader_id?.toString();
+    if (!lastOffer || lastOffer.party?.toString() !== traderId) {
       return res.status(400).json({ error: 'No trader offer to respond to' });
     }
 

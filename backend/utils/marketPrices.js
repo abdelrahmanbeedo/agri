@@ -107,8 +107,32 @@ const marketPrices = {
 };
 
 function getMarketData(category, productName) {
-  const categoryData = marketPrices[category.toLowerCase()];
-  if (!categoryData) {
+  try {
+    const categoryData = marketPrices[category?.toLowerCase()];
+    if (!categoryData) {
+      return {
+        min: 5,
+        max: 15,
+        avg: 10,
+        unit: 'unit',
+        trend: 'stable',
+        trendPercent: 0,
+        source: 'Platform Average'
+      };
+    }
+
+    const productData = categoryData[productName];
+    if (!productData) {
+      const firstGrade = Object.values(categoryData)[0];
+      return { ...firstGrade, source: 'Platform Average' };
+    }
+
+    const grades = Object.keys(productData);
+    const firstKey = grades[0];
+    const avgGrade = productData[firstKey];
+
+    return { ...avgGrade, source: 'Regional Market Average' };
+  } catch (e) {
     return {
       min: 5,
       max: 15,
@@ -116,20 +140,9 @@ function getMarketData(category, productName) {
       unit: 'unit',
       trend: 'stable',
       trendPercent: 0,
-      source: 'Platform Average'
+      source: 'Default'
     };
   }
-
-  const productData = categoryData[productName];
-  if (!productData) {
-    const firstGrade = Object.values(productData)[0];
-    return { ...firstGrade, source: 'Platform Average' };
-  }
-
-  const grades = Object.keys(productData);
-  const avgGrade = productData[grades[0]];
-
-  return { ...avgGrade, source: 'Regional Market Average' };
 }
 
 function calculateOfferAnalysis(offerPrice, askPrice, benchmarkPrice, quantity) {

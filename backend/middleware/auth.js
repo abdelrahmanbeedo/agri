@@ -7,7 +7,8 @@ export const requireAuth = async (req, res, next) => {
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) return res.status(401).json({msg:"No token"});
     const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = await User.findById(decoded.id).select("-password_hash");
+    const user = await User.findById(decoded.id).select("-password_hash");
+    req.user = { ...user.toObject(), id: user._id.toString() };
     next();
   } catch (err) {
     res.status(401).json({msg:"Invalid token"});

@@ -99,7 +99,9 @@ export default function NegotiationPage() {
       fetchNegotiation();
     } catch (err) {
       console.error('Submit offer error:', err);
-      alert(err.response?.data?.error || 'Failed to submit offer');
+      const errorMsg = err.response?.data?.error || err.response?.data?.msg || err.message || 'Failed to submit offer';
+      alert(errorMsg);
+      console.log('Full error:', err.response?.data);
     } finally {
       setSubmitting(false);
     }

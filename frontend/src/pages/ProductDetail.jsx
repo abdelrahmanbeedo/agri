@@ -76,10 +76,13 @@ export default function ProductDetail() {
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      console.log("Negotiation created:", res.data);
       navigate(`/negotiation/${res.data.session_id}`);
     } catch (err) {
       console.error("Start negotiation error:", err);
-      alert(err.response?.data?.error || "Failed to start negotiation. You may already have an active negotiation.");
+      const errorMsg = err.response?.data?.error || err.response?.data?.msg || err.message || "Failed to start negotiation";
+      alert(errorMsg);
+      console.log("Full error response:", err.response?.data);
     } finally {
       setStartingNegotiation(false);
     }
