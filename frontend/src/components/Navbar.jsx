@@ -2,12 +2,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Leaf, MessageSquare, LogOut, User, Zap } from "lucide-react";
+import { Leaf, MessageSquare, LogOut, User, Zap, Globe } from "lucide-react";
+import { useLanguage } from "../i18n/LanguageContext";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function Navbar() {
   const { user, isLoggedIn, logout, token } = useAuth();
+  const { language, toggleLanguage } = useLanguage();
   const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -57,6 +59,13 @@ export default function Navbar() {
             >
               🍌 Classify
             </Link>
+            <button
+              onClick={toggleLanguage}
+              className="flex items-center gap-1 px-3 py-2 text-sage-700 hover:text-sage-900 hover:bg-sage-50 rounded-lg transition-colors text-sm font-medium"
+            >
+              <Globe className="w-4 h-4" />
+              {language === 'en' ? 'عربي' : 'English'}
+            </button>
           <div className="flex items-center gap-1">
             {isLoggedIn ? (
               <>
