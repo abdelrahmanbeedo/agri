@@ -288,10 +288,10 @@ export default function NegotiationPage() {
                   <h1 className="text-xl font-bold text-sage-900">{t('negotiation.title')}</h1>
                   <div className="flex items-center gap-3">
                     {timeLeft !== null && !isClosed && (
-                      <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${timeLeft < 3600000 ? 'bg-red-50 text-red-600' : 'bg-sage-50 text-sage-600'}`}>
+                      <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${timeLeft < 300000 ? 'bg-red-50 text-red-600' : 'bg-sage-50 text-sage-600'}`}>
                         <Timer className="w-4 h-4" />
                         <span className="text-sm font-medium">
-                          {Math.floor(timeLeft / 3600000)}{t('negotiation.hours')} {Math.floor((timeLeft % 3600000) / 60000)}{t('negotiation.minutes')} {Math.floor((timeLeft % 60000) / 1000)}{t('negotiation.seconds')}
+                          {timeLeft >= 3600000 && <>{Math.floor(timeLeft / 3600000)}{t('negotiation.hours')} </>}{Math.floor((timeLeft % 3600000) / 60000)}{t('negotiation.minutes')} {Math.floor((timeLeft % 60000) / 1000)}{t('negotiation.seconds')}
                         </span>
                       </div>
                     )}
