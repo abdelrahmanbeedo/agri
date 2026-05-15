@@ -85,6 +85,14 @@ export default function Navbar() {
                     My Products
                   </Link>
                 )}
+                {user?.role === "admin" && (
+                  <Link
+                    to="/admin"
+                    className="px-4 py-2 text-sm font-medium text-sage-700 hover:text-sage-900 hover:bg-sage-50 rounded-lg transition-colors"
+                  >
+                    Admin
+                  </Link>
+                )}
                 <Link
                   to="/orders"
                   className="px-4 py-2 text-sm font-medium text-sage-700 hover:text-sage-900 hover:bg-sage-50 rounded-lg transition-colors"

@@ -6,6 +6,17 @@ import { getMarketData, calculateOfferAnalysis } from '../utils/marketPrices.js'
 
 const BENCHMARK_THRESHOLD = 0.4;
 
+async function checkExpiry(negotiation) {
+  if (negotiation.status === 'active' && negotiation.expires_at && new Date() > negotiation.expires_at) {
+    negotiation.status = 'expired';
+    negotiation.closed_at = new Date();
+    negotiation.closed_reason = 'expired';
+    await negotiation.save();
+    return true;
+  }
+  return false;
+}
+
 export async function createNegotiation(req, res) {
   try {
     const { product_id, ask_price, ask_quantity } = req.body;
@@ -124,6 +135,9 @@ export async function getNegotiation(req, res) {
       return res.status(404).json({ error: 'Negotiation not found' });
     }
 
+    const expired = await checkExpiry(negotiation);
+    if (expired) console.log('Negotiation auto-expired on access');
+
     const farmerId = negotiation.farmer_id?._id?.toString() || negotiation.farmer_id?.toString();
     const traderId = negotiation.trader_id?._id?.toString() || negotiation.trader_id?.toString();
 
@@ -198,6 +212,11 @@ export async function submitOffer(req, res) {
 
     if (!negotiation) {
       return res.status(404).json({ error: 'Negotiation not found' });
+    }
+
+    const expiredOnSubmit = await checkExpiry(negotiation);
+    if (expiredOnSubmit) {
+      return res.status(400).json({ error: 'Negotiation session has expired' });
     }
 
     if (negotiation.status !== 'active') {

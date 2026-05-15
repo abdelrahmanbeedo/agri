@@ -1,6 +1,9 @@
 import { Calendar, MapPin, CreditCard, Package, Clock, FileText } from 'lucide-react';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 export default function OfferCard({ offer, party, isLatest = false, analysis = null }) {
+  const { t } = useLanguage();
+
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString('en-US', {
       month: 'short',
@@ -11,9 +14,9 @@ export default function OfferCard({ offer, party, isLatest = false, analysis = n
 
   const getPaymentLabel = (terms) => {
     switch (terms) {
-      case 'cash': return 'Cash on Delivery';
-      case 'credit': return 'Credit (Later Payment)';
-      case 'escrow': return 'Escrow Protected';
+      case 'cash': return t('negotiation.cashOnDelivery');
+      case 'credit': return t('negotiation.credit');
+      case 'escrow': return t('negotiation.escrow');
       default: return terms;
     }
   };
@@ -41,11 +44,11 @@ export default function OfferCard({ offer, party, isLatest = false, analysis = n
 
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
-          <p className="text-sm text-sage-500 mb-1">Price per Unit</p>
+          <p className="text-sm text-sage-500 mb-1">{t('negotiation.pricePerUnit')}</p>
           <p className="text-xl font-bold text-sage-900">{offer.price_per_unit} EGP</p>
         </div>
         <div>
-          <p className="text-sm text-sage-500 mb-1">Total Value</p>
+          <p className="text-sm text-sage-500 mb-1">Total</p>
           <p className="text-xl font-bold text-honey-600">{offer.total_value.toLocaleString()} EGP</p>
         </div>
       </div>
@@ -95,7 +98,7 @@ export default function OfferCard({ offer, party, isLatest = false, analysis = n
                 ? 'bg-green-100 text-green-600'
                 : 'bg-blue-100 text-blue-600'
             }`}>
-              {analysis.isLowBall ? '!' : analysis.position === 'very_close' ? '✓' : 'i'}
+              {analysis.isLowBall ? '!' : analysis.position === 'very_close' ? '\u2713' : 'i'}
             </div>
             <div>
               <p className={`text-sm font-medium ${
@@ -110,7 +113,7 @@ export default function OfferCard({ offer, party, isLatest = false, analysis = n
               </p>
               {analysis.position !== 'very_close' && !analysis.isLowBall && (
                 <p className="text-xs text-blue-600 mt-1">
-                  Suggested midpoint: {analysis.midpoint.toFixed(2)} EGP
+                  Suggested midpoint: {analysis.midpoint?.toFixed(2)} EGP
                 </p>
               )}
             </div>

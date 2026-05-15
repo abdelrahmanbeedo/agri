@@ -1,6 +1,9 @@
 import { Star, BadgeCheck, AlertTriangle } from 'lucide-react';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 export default function ReputationBadge({ profile, size = 'normal' }) {
+  const { t } = useLanguage();
+
   const sizeClasses = {
     small: 'text-xs',
     normal: 'text-sm',
@@ -47,7 +50,7 @@ export default function ReputationBadge({ profile, size = 'normal' }) {
         </div>
         
         <span className="text-sage-500">
-          {totalDeals} deals
+          {totalDeals} {t('negotiation.roundsRemaining')}
         </span>
 
         {disputes > 0 && (

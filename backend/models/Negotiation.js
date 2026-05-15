@@ -142,6 +142,10 @@ const negotiationSchema = new mongoose.Schema({
   paused_at: {
     type: Date,
     default: null
+  },
+  expires_at: {
+    type: Date,
+    default: () => new Date(Date.now() + 48 * 60 * 60 * 1000)
   }
 }, {
   timestamps: true

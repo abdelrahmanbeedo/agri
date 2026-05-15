@@ -11,6 +11,11 @@ import OrderDetail from "./pages/OrderDetail";
 import BananaClassifier from "./pages/BananaClassifier";
 import NegotiationPage from "./pages/NegotiationPage";
 import NegotiationsList from "./pages/NegotiationsList";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminProducts from "./pages/admin/AdminProducts";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminNegotiations from "./pages/admin/AdminNegotiations";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
@@ -87,6 +92,47 @@ export default function App() {
         element={
           <ProtectedRoute>
             <NegotiationPage />
+          </ProtectedRoute>
+        }
+      />
+      {/* Admin */}
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute role="admin">
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <ProtectedRoute role="admin">
+            <AdminUsers />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/products"
+        element={
+          <ProtectedRoute role="admin">
+            <AdminProducts />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/orders"
+        element={
+          <ProtectedRoute role="admin">
+            <AdminOrders />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/negotiations"
+        element={
+          <ProtectedRoute role="admin">
+            <AdminNegotiations />
           </ProtectedRoute>
         }
       />

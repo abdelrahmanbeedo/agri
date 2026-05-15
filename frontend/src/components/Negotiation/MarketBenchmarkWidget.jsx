@@ -1,6 +1,9 @@
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 export default function MarketBenchmarkWidget({ marketData, offerPrice }) {
+  const { t } = useLanguage();
+
   const getTrendIcon = (trend) => {
     switch (trend) {
       case 'up': return <TrendingUp className="w-4 h-4 text-green-600" />;
@@ -23,12 +26,12 @@ export default function MarketBenchmarkWidget({ marketData, offerPrice }) {
 
   return (
     <div className="bg-white rounded-2xl border border-sage-100 p-5">
-      <h3 className="font-semibold text-sage-900 mb-4">Market Benchmark</h3>
+      <h3 className="font-semibold text-sage-900 mb-4">{t('negotiation.marketBenchmark')}</h3>
       
       <div className="space-y-4">
         <div className="flex items-center justify-between p-3 bg-sage-50 rounded-xl">
           <div>
-            <p className="text-sm text-sage-500">Today's Avg Price</p>
+            <p className="text-sm text-sage-500">{t('negotiation.todaysAvg')}</p>
             <p className="text-xl font-bold text-sage-900">
               {marketData.avg} EGP/{marketData.unit}
             </p>
@@ -41,27 +44,27 @@ export default function MarketBenchmarkWidget({ marketData, offerPrice }) {
 
         <div className="grid grid-cols-2 gap-3">
           <div className="p-3 border border-sage-100 rounded-xl">
-            <p className="text-xs text-sage-500 mb-1">Min</p>
+            <p className="text-xs text-sage-500 mb-1">{t('negotiation.min')}</p>
             <p className="font-semibold text-sage-700">{marketData.min}</p>
           </div>
           <div className="p-3 border border-sage-100 rounded-xl">
-            <p className="text-xs text-sage-500 mb-1">Max</p>
+            <p className="text-xs text-sage-500 mb-1">{t('negotiation.max')}</p>
             <p className="font-semibold text-sage-700">{marketData.max}</p>
           </div>
         </div>
 
         {offerPrice && (
           <div className={`p-3 rounded-xl ${offerVsMarket > 0 ? 'bg-green-50' : offerVsMarket < 0 ? 'bg-red-50' : 'bg-sage-50'}`}>
-            <p className="text-xs text-sage-500 mb-1">Your Offer vs Market</p>
+            <p className="text-xs text-sage-500 mb-1">{t('negotiation.yourOfferVsMarket')}</p>
             <p className={`font-semibold ${offerVsMarket > 0 ? 'text-green-600' : offerVsMarket < 0 ? 'text-red-600' : 'text-sage-700'}`}>
-              {offerVsMarket > 0 ? '+' : ''}{offerVsMarket}% {offerVsMarket > 0 ? 'above' : 'below'} average
+              {offerVsMarket > 0 ? '+' : ''}{offerVsMarket}% {offerVsMarket > 0 ? t('negotiation.aboveAverage') : t('negotiation.belowAverage')}
             </p>
           </div>
         )}
 
         <div className="pt-3 border-t border-sage-100">
           <p className="text-xs text-sage-400">
-            Source: {marketData.source || 'Regional Market Average'}
+            {t('negotiation.source')}: {marketData.source || 'Regional Market Average'}
           </p>
         </div>
       </div>

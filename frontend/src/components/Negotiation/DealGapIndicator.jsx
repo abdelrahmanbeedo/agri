@@ -1,4 +1,8 @@
+import { useLanguage } from '../../i18n/LanguageContext';
+
 export default function DealGapIndicator({ askPrice, offerPrice, benchmarkPrice }) {
+  const { t } = useLanguage();
+
   const minPrice = Math.min(askPrice, offerPrice || askPrice, benchmarkPrice) * 0.9;
   const maxPrice = Math.max(askPrice, offerPrice || askPrice, benchmarkPrice) * 1.1;
   const range = maxPrice - minPrice;
@@ -28,7 +32,7 @@ export default function DealGapIndicator({ askPrice, offerPrice, benchmarkPrice 
 
   return (
     <div className="bg-white rounded-2xl border border-sage-100 p-5">
-      <h3 className="font-semibold text-sage-900 mb-4">Deal Gap</h3>
+      <h3 className="font-semibold text-sage-900 mb-4">{t('negotiation.dealGap')}</h3>
       
       <div className="relative h-8 mb-6">
         <div className="absolute inset-0 bg-sage-100 rounded-full" />
@@ -69,16 +73,16 @@ export default function DealGapIndicator({ askPrice, offerPrice, benchmarkPrice 
       <div className="flex justify-between text-xs text-sage-500 mb-4">
         <div className="flex items-center gap-1">
           <div className="w-3 h-3 bg-sage-600 rounded-full" />
-          <span>Farmer Ask</span>
+          <span>{t('negotiation.farmerAsk')}</span>
         </div>
         <div className="flex items-center gap-1">
           <div className="w-2 h-2 bg-gray-400 rounded-full" />
-          <span>Market Avg</span>
+          <span>{t('negotiation.marketAvg')}</span>
         </div>
         {offerPrice && (
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 bg-honey-500 rounded-full" />
-            <span>Your Offer</span>
+            <span>{t('negotiation.yourOfferLabel')}</span>
           </div>
         )}
       </div>
@@ -86,10 +90,10 @@ export default function DealGapIndicator({ askPrice, offerPrice, benchmarkPrice 
       {offerPrice && (
         <div className={`text-center p-3 rounded-xl ${getLabelColor()} bg-opacity-10`}>
           <p className="font-semibold">
-            Gap: {gap.toFixed(2)} EGP ({gapPercent}%)
+            {t('negotiation.gap')}: {gap.toFixed(2)} EGP ({gapPercent}%)
           </p>
           {parseFloat(gapPercent) <= 5 && (
-            <p className="text-sm mt-1">Very close to a deal!</p>
+            <p className="text-sm mt-1">{t('negotiation.veryClose')}</p>
           )}
         </div>
       )}
