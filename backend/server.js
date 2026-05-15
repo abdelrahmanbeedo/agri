@@ -16,7 +16,7 @@ dotenv.config();
 const app = express();
 
 app.use(helmet());
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:5000').split(',');
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:5000,https://agrimarketeg.vercel.app').split(',');
 app.use(cors({
   origin: allowedOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
