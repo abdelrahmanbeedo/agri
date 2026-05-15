@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
+import { useLanguage } from "../i18n/LanguageContext";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { Leaf, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 
 export default function Register() {
+  const { t, isRTL } = useLanguage();
   const [role, setRole] = useState("farmer");
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
@@ -30,13 +32,13 @@ export default function Register() {
     setLoading(true);
 
     if (!form.name || !form.email || !form.password) {
-      setError("Please fill in all fields.");
+      setError(t('auth.fillAllFields'));
       setLoading(false);
       return;
     }
 
     if (form.password.length < 6) {
-      setError("Password must be at least 6 characters.");
+      setError(t('auth.passwordLengthError'));
       setLoading(false);
       return;
     }
@@ -61,11 +63,11 @@ export default function Register() {
           }
         }, 100);
       } else {
-        setError("Invalid response from server.");
+        setError(t('auth.invalidResponse'));
         setLoading(false);
       }
     } catch (err) {
-      setError(err.response?.data?.msg || err.response?.data?.error || "Registration failed.");
+      setError(err.response?.data?.msg || err.response?.data?.error || t('auth.registrationFailed'));
       setLoading(false);
     }
   }
@@ -80,8 +82,8 @@ export default function Register() {
               <div className="inline-flex items-center justify-center w-14 h-14 bg-sage-100 rounded-xl mb-4">
                 <Leaf className="w-7 h-7 text-sage-600" />
               </div>
-              <h1 className="text-2xl font-bold text-sage-900">Create your account</h1>
-              <p className="text-sage-500 mt-1">Join the AgriMarket community</p>
+              <h1 className="text-2xl font-bold text-sage-900">{t('auth.createAccount')}</h1>
+              <p className="text-sage-500 mt-1">{t('auth.joinCommunity')}</p>
             </div>
 
             {error && (
@@ -93,7 +95,7 @@ export default function Register() {
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label className="block text-sm font-medium text-sage-700 mb-2">
-                  Full name
+                  {t('auth.fullName')}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -104,7 +106,7 @@ export default function Register() {
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     className="block w-full pl-10 pr-4 py-3 border border-sage-200 rounded-xl text-sage-900 placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent transition-shadow"
-                    placeholder="Ahmed Hassan"
+                    placeholder={t('auth.namePlaceholder')}
                     required
                   />
                 </div>
@@ -112,7 +114,7 @@ export default function Register() {
 
               <div>
                 <label className="block text-sm font-medium text-sage-700 mb-2">
-                  Email address
+                  {t('auth.email')}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -123,7 +125,7 @@ export default function Register() {
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     className="block w-full pl-10 pr-4 py-3 border border-sage-200 rounded-xl text-sage-900 placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent transition-shadow"
-                    placeholder="you@example.com"
+                    placeholder={t('auth.emailPlaceholder')}
                     required
                   />
                 </div>
@@ -131,7 +133,7 @@ export default function Register() {
 
               <div>
                 <label className="block text-sm font-medium text-sage-700 mb-2">
-                  Password
+                  {t('auth.password')}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -142,7 +144,7 @@ export default function Register() {
                     value={form.password}
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
                     className="block w-full pl-10 pr-12 py-3 border border-sage-200 rounded-xl text-sage-900 placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent transition-shadow"
-                    placeholder="Minimum 6 characters"
+                    placeholder={t('auth.passwordMinLength')}
                     required
                     minLength={6}
                   />
@@ -158,7 +160,7 @@ export default function Register() {
 
               <div>
                 <label className="block text-sm font-medium text-sage-700 mb-2">
-                  I am a...
+                  {t('auth.iAm')}
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
@@ -170,8 +172,8 @@ export default function Register() {
                         : "border-sage-200 hover:border-sage-300"
                     }`}
                   >
-                    <div className="font-medium text-sage-900">Farmer</div>
-                    <div className="text-sm text-sage-500">Sell my products</div>
+                    <div className="font-medium text-sage-900">{t('auth.farmer')}</div>
+                    <div className="text-sm text-sage-500">{t('auth.sellProducts')}</div>
                   </button>
                   <button
                     type="button"
@@ -182,8 +184,8 @@ export default function Register() {
                         : "border-sage-200 hover:border-sage-300"
                     }`}
                   >
-                    <div className="font-medium text-sage-900">Trader</div>
-                    <div className="text-sm text-sage-500">Buy products</div>
+                    <div className="font-medium text-sage-900">{t('auth.trader')}</div>
+                    <div className="text-sm text-sage-500">{t('auth.buyProducts')}</div>
                   </button>
                 </div>
               </div>
@@ -193,15 +195,15 @@ export default function Register() {
                 disabled={loading}
                 className="w-full bg-sage-600 text-white py-3 rounded-xl font-medium hover:bg-sage-700 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {loading ? "Creating account..." : "Create account"}
+                {loading ? t('auth.creatingAccount') : t('auth.createAccountBtn')}
               </button>
             </form>
 
             <div className="mt-8 text-center">
               <p className="text-sage-600">
-                Already have an account?{" "}
+                {t('auth.haveAccount')}{" "}
                 <Link to="/login" className="font-medium text-sage-800 hover:text-sage-900">
-                  Sign in
+                  {t('auth.login')}
                 </Link>
               </p>
             </div>

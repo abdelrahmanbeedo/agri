@@ -3,7 +3,6 @@ import mongoose from "mongoose";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-import mongoSanitize from "express-mongo-sanitize";
 import authRoutes from "./routes/auth.js";
 import dotenv from "dotenv";
 import productRoutes from "./routes/productRoutes.js";
@@ -42,7 +41,27 @@ const authLimiter = rateLimit({
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 
-app.use(mongoSanitize());
+function mongoSanitize(obj) {
+  if (Array.isArray(obj)) {
+    return obj.map(mongoSanitize);
+  }
+  if (obj && typeof obj === 'object') {
+    const sanitized = {};
+    for (const [key, value] of Object.entries(obj)) {
+      const cleanKey = key.replace(/^\$/, '_').replace(/\./g, '_');
+      sanitized[cleanKey] = mongoSanitize(value);
+    }
+    return sanitized;
+  }
+  return obj;
+}
+
+app.use((req, res, next) => {
+  if (req.body) req.body = mongoSanitize(req.body);
+  if (req.query) { Object.keys(req.query).forEach(k => { const v = req.query[k]; delete req.query[k]; req.query[k.replace(/^\$/, '_').replace(/\./g, '_')] = mongoSanitize(v); }); }
+  if (req.params) { Object.keys(req.params).forEach(k => { const v = req.params[k]; delete req.params[k]; req.params[k.replace(/^\$/, '_').replace(/\./g, '_')] = mongoSanitize(v); }); }
+  next();
+});
 app.use(express.json({ limit: '10kb' }));
 app.use("/api/products", productRoutes);
 app.use("/api/auth", authRoutes);

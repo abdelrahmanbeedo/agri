@@ -1,12 +1,14 @@
 import { useState } from "react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
+import { useLanguage } from "../i18n/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import { X, Package, AlertCircle } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function PlaceOrderModal({ product, isOpen, onClose }) {
+  const { t, isRTL } = useLanguage();
   const { token } = useAuth();
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
@@ -24,12 +26,12 @@ export default function PlaceOrderModal({ product, isOpen, onClose }) {
     setError("");
 
     if (quantity > maxQuantity) {
-      setError(`Maximum quantity available: ${maxQuantity} ${product.unit}`);
+      setError(`${t('modals.placeOrder.maxQuantityError')} ${maxQuantity} ${product.unit}`);
       return;
     }
 
     if (quantity <= 0) {
-      setError("Quantity must be greater than 0");
+      setError(t('modals.placeOrder.quantityPositive'));
       return;
     }
 
@@ -50,7 +52,7 @@ export default function PlaceOrderModal({ product, isOpen, onClose }) {
       navigate(`/orders/${res.data._id}`);
     } catch (err) {
       console.error("Place order error:", err);
-      setError(err.response?.data?.msg || "Failed to place order. Please try again.");
+      setError(err.response?.data?.msg || t('modals.placeOrder.failedOrder'));
     } finally {
       setLoading(false);
     }
@@ -62,7 +64,7 @@ export default function PlaceOrderModal({ product, isOpen, onClose }) {
     <div className="fixed inset-0 bg-sage-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5 border-b border-sage-100">
-          <h2 className="text-lg font-bold text-sage-900">Place Order</h2>
+          <h2 className="text-lg font-bold text-sage-900">{t('modals.placeOrder.title')}</h2>
           <button
             onClick={onClose}
             className="p-1.5 text-sage-400 hover:text-sage-600 hover:bg-sage-50 rounded-lg transition-colors"

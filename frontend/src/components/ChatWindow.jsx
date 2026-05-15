@@ -1,11 +1,13 @@
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
+import { useLanguage } from "../i18n/LanguageContext";
 import { Send, Package, DollarSign } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function ChatWindow({ conversation, currentUser, onMessageSent }) {
+  const { t, isRTL } = useLanguage();
   const { token } = useAuth();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
@@ -68,7 +70,7 @@ export default function ChatWindow({ conversation, currentUser, onMessageSent })
       inputRef.current?.focus();
     } catch (err) {
       console.error("Send message error:", err);
-      alert("Failed to send message.");
+      alert(t('messages.failedSend'));
     } finally {
       setSending(false);
     }
@@ -101,7 +103,7 @@ export default function ChatWindow({ conversation, currentUser, onMessageSent })
           </div>
           {conversation.product_id && (
             <div className="flex items-center gap-3 text-sm">
-              <span className="text-sage-600">Re: {conversation.product_id.title}</span>
+              <span className="text-sage-600">{t('messages.re')} {conversation.product_id.title}</span>
               <span className="px-3 py-1 bg-honey-100 text-honey-700 rounded-lg font-medium">
                 {conversation.product_id.price_per_unit} EGP/{conversation.product_id.unit}
               </span>
@@ -116,8 +118,8 @@ export default function ChatWindow({ conversation, currentUser, onMessageSent })
             <div className="w-12 h-12 bg-sage-100 rounded-full flex items-center justify-center mx-auto mb-3">
               <Package className="w-6 h-6 text-sage-400" />
             </div>
-            <p className="text-sage-500">No messages yet</p>
-            <p className="text-sm text-sage-400">Start the conversation below</p>
+            <p className="text-sage-500">{t('messages.noMessagesYet')}</p>
+            <p className="text-sm text-sage-400">{t('messages.startConversation')}</p>
           </div>
         ) : (
           messages.map((message) => {
@@ -163,7 +165,7 @@ export default function ChatWindow({ conversation, currentUser, onMessageSent })
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type a message..."
+            placeholder={t('messages.typeMessage')}
             className="flex-1 px-4 py-3 border border-sage-200 rounded-xl text-sage-900 placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
             disabled={sending}
           />

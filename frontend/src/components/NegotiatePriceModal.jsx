@@ -3,11 +3,13 @@ import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { X, Package, AlertCircle, BadgeDollarSign } from "lucide-react";
+import { useLanguage } from "../i18n/LanguageContext";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function NegotiatePriceModal({ product, isOpen, onClose }) {
   const { token } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [proposedPrice, setProposedPrice] = useState(product?.price_per_unit || "");
   const [quantity, setQuantity] = useState(1);
@@ -24,12 +26,12 @@ export default function NegotiatePriceModal({ product, isOpen, onClose }) {
     setError("");
 
     if (!proposedPrice || Number(proposedPrice) <= 0) {
-      setError("Please enter a valid price");
+      setError(t('modals.negotiatePrice.validPrice'));
       return;
     }
 
     if (quantity > maxQuantity || quantity <= 0) {
-      setError(`Quantity must be between 1 and ${maxQuantity} ${product.unit}`);
+      setError(t('modals.negotiatePrice.quantityRange').replace('{max}', maxQuantity).replace('{unit}', product.unit));
       return;
     }
 
@@ -58,7 +60,7 @@ export default function NegotiatePriceModal({ product, isOpen, onClose }) {
       navigate(`/messages?conversation=${convRes.data._id}`);
     } catch (err) {
       console.error("Negotiation error:", err);
-      setError(err.response?.data?.msg || "Failed to send negotiation. Please try again.");
+      setError(err.response?.data?.msg || t('modals.negotiatePrice.failedSend'));
     } finally {
       setLoading(false);
     }
@@ -78,7 +80,7 @@ export default function NegotiatePriceModal({ product, isOpen, onClose }) {
             <div className="w-10 h-10 bg-honey-100 rounded-lg flex items-center justify-center">
               <BadgeDollarSign className="w-5 h-5 text-honey-600" />
             </div>
-            <h2 className="text-lg font-bold text-sage-900">Negotiate Price</h2>
+            <h2 className="text-lg font-bold text-sage-900">{t('modals.negotiatePrice.title')}</h2>
           </div>
           <button
             onClick={onClose}
@@ -97,9 +99,9 @@ export default function NegotiatePriceModal({ product, isOpen, onClose }) {
               <div>
                 <p className="font-semibold text-sage-900">{product.title}</p>
                 <p className="text-sm text-sage-600 mt-0.5">
-                  Current: <span className="font-semibold">{product.price_per_unit} EGP/{product.unit}</span>
+                  {t('modals.negotiatePrice.current')} <span className="font-semibold">{product.price_per_unit} EGP/{product.unit}</span>
                 </p>
-                <p className="text-sm text-sage-500">Available: {maxQuantity} {product.unit}</p>
+                <p className="text-sm text-sage-500">{t('modals.negotiatePrice.available')} {maxQuantity} {product.unit}</p>
               </div>
             </div>
           </div>
@@ -114,7 +116,7 @@ export default function NegotiatePriceModal({ product, isOpen, onClose }) {
           <form onSubmit={handleSendNegotiation} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-sage-700 mb-2">
-                Your Offer (EGP per {product.unit})
+                {t('modals.negotiatePrice.yourOffer').replace('{unit}', product.unit)}
               </label>
               <input
                 type="number"
@@ -127,14 +129,14 @@ export default function NegotiatePriceModal({ product, isOpen, onClose }) {
               />
               {hasDiscount && (
                 <p className="text-sm text-honey-600 mt-1.5 flex items-center gap-1">
-                  <span>{discountPercent}% below asking price</span>
+                  <span>{discountPercent}{t('modals.negotiatePrice.belowAsking')}</span>
                 </p>
               )}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-sage-700 mb-2">
-                Quantity ({product.unit})
+                {t('modals.negotiatePrice.quantity').replace('{unit}', product.unit)}
               </label>
               <input
                 type="number"
@@ -149,31 +151,31 @@ export default function NegotiatePriceModal({ product, isOpen, onClose }) {
 
             <div>
               <label className="block text-sm font-medium text-sage-700 mb-2">
-                Message (Optional)
+                {t('modals.negotiatePrice.message')}
               </label>
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 className="w-full px-4 py-3 border border-sage-200 rounded-xl text-sage-900 focus:outline-none focus:ring-2 focus:ring-sage-500 resize-none"
                 rows="3"
-                placeholder="Add a message to your offer..."
+                placeholder={t('modals.negotiatePrice.messagePlaceholder')}
               />
             </div>
 
             <div className="p-4 bg-sage-50 rounded-xl space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-sage-600">Original Total:</span>
+                <span className="text-sage-600">{t('modals.negotiatePrice.originalTotal')}</span>
                 <span className="font-medium text-sage-900">{currentTotal} EGP</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-sage-600">Your Offer:</span>
+                <span className="text-sage-600">{t('modals.negotiatePrice.yourOfferLabel')}</span>
                 <span className={`font-semibold ${hasDiscount ? 'text-honey-600' : 'text-sage-900'}`}>
                   {proposedTotal} EGP
                 </span>
               </div>
               {hasDiscount && (
                 <div className="flex justify-between text-sm pt-2 border-t border-sage-200">
-                  <span className="text-sage-600">Your Savings:</span>
+                  <span className="text-sage-600">{t('modals.negotiatePrice.yourSavings')}</span>
                   <span className="font-semibold text-honey-600">
                     {((product.price_per_unit - Number(proposedPrice)) * quantity).toLocaleString()} EGP
                   </span>
@@ -187,14 +189,14 @@ export default function NegotiatePriceModal({ product, isOpen, onClose }) {
                 onClick={onClose}
                 className="flex-1 px-4 py-3 border border-sage-200 text-sage-700 rounded-xl font-medium hover:bg-sage-50 transition-colors"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 type="submit"
                 disabled={loading}
                 className="flex-1 px-4 py-3 bg-honey-500 text-white rounded-xl font-medium hover:bg-honey-600 disabled:opacity-50 transition-colors"
               >
-                {loading ? "Sending..." : "Send Offer"}
+                {loading ? t('modals.negotiatePrice.sending') : t('modals.negotiatePrice.sendOffer')}
               </button>
             </div>
           </form>

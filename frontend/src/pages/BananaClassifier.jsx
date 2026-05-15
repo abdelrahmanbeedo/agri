@@ -2,11 +2,13 @@
 import React, { useState, useCallback } from "react";
 import axios from "axios";
 import { useDropzone } from "react-dropzone";
+import { useLanguage } from "../i18n/LanguageContext";
 import { FaCloudUploadAlt, FaSpinner, FaHistory } from "react-icons/fa";
 
 const ML_API_URL = import.meta.env.VITE_ML_API_URL || "http://localhost:8000";
 
 const BananaClassifier = () => {
+  const { t, isRTL } = useLanguage();
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [result, setResult] = useState(null);
@@ -66,7 +68,7 @@ const BananaClassifier = () => {
       fetchHistory(); // Refresh history after new classification
     } catch (err) {
       console.error("Error classifying image:", err);
-      setError("Failed to classify image. Ensure the Python API is running.");
+      setError(t('bananaClassifier.failedClassify'));
     } finally {
       setLoading(false);
     }
@@ -90,16 +92,16 @@ const BananaClassifier = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center py-12 px-4 sm:px-6 lg:px-8" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="max-w-3xl w-full space-y-8 bg-white p-10 rounded-xl shadow-lg">
         
         {/* Header */}
         <div className="text-center">
           <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">
-            🍌 Fruit & Mango AI
+            {t('bananaClassifier.title')}
           </h1>
           <p className="mt-2 text-lg text-gray-600">
-            Upload an image of a Banana or Mango to detect its ripeness.
+            {t('bananaClassifier.subtitle')}
           </p>
         </div>
 
@@ -114,9 +116,9 @@ const BananaClassifier = () => {
             <input {...getInputProps()} />
             <FaCloudUploadAlt className="text-6xl text-gray-400 mb-4" />
             <p className="text-xl font-medium text-gray-700">
-              {isDragActive ? "Drop the image here..." : "Drag & drop an image here, or click to select"}
+              {isDragActive ? t('bananaClassifier.dropHere') : t('bananaClassifier.dragDrop')}
             </p>
-            <p className="mt-2 text-sm text-gray-500">Supports JPG, PNG</p>
+            <p className="mt-2 text-sm text-gray-500">{t('bananaClassifier.supports')}</p>
           </div>
         ) : (
           <div className="flex flex-col items-center space-y-6">
@@ -130,7 +132,7 @@ const BananaClassifier = () => {
               <button
                 onClick={handleReset}
                 className="absolute top-2 right-2 bg-white bg-opacity-75 hover:bg-opacity-100 text-gray-700 p-2 rounded-full shadow-sm transition"
-                title="Remove image"
+                title={t('bananaClassifier.removeImage')}
               >
                 ✕
               </button>
@@ -142,7 +144,7 @@ const BananaClassifier = () => {
                 onClick={handleClassify}
                 className="w-full sm:w-auto px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition transform hover:scale-105 flex items-center justify-center space-x-2"
               >
-                <span>🔍 Analyze Ripeness</span>
+                <span>{t('bananaClassifier.analyzeRipeness')}</span>
               </button>
             )}
 
@@ -150,7 +152,7 @@ const BananaClassifier = () => {
             {loading && (
               <div className="flex items-center space-x-3 text-green-600">
                 <FaSpinner className="animate-spin text-2xl" />
-                <span className="font-medium animate-pulse">Analyzing image features...</span>
+                <span className="font-medium animate-pulse">{t('bananaClassifier.analyzing')}</span>
               </div>
             )}
 
@@ -167,20 +169,20 @@ const BananaClassifier = () => {
         {result && (
           <div className="mt-8 border-t pt-8 animate-fade-in-up">
             <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-              Prediction Result
+              {t('bananaClassifier.predictionResult')}
             </h2>
             
             <div className="flex flex-col md:flex-row items-center justify-center space-y-6 md:space-y-0 md:space-x-12">
               {/* Top Prediction */}
               <div className="text-center">
                 <div className="text-sm text-gray-500 uppercase tracking-wide font-semibold mb-1">
-                  Identified As
+                  {t('bananaClassifier.identifiedAs')}
                 </div>
                 <div className="text-5xl font-extrabold text-green-600">
                   {formatClass(result.prediction)}
                 </div>
                 <div className="text-lg text-gray-600 mt-2 font-medium">
-                  Confidence: {(result.confidence * 100).toFixed(1)}%
+                  {t('bananaClassifier.confidence')} {(result.confidence * 100).toFixed(1)}%
                 </div>
               </div>
 
@@ -211,7 +213,7 @@ const BananaClassifier = () => {
                 className="px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg transition flex items-center justify-center mx-auto space-x-2"
               >
                 <FaHistory />
-                <span>Classify Another Image</span>
+                <span>{t('bananaClassifier.classifyAnother')}</span>
               </button>
             </div>
           </div>
@@ -220,7 +222,7 @@ const BananaClassifier = () => {
         {/* Recent History Section */}
         {history.length > 0 && (
           <div className="mt-12 border-t pt-8">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Recent Scans</h3>
+            <h3 className="text-xl font-bold text-gray-800 mb-4">{t('bananaClassifier.recentScans')}</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4">
               {history.map((item) => (
                 <div key={item._id} className="bg-gray-50 rounded-lg p-2 border hover:shadow-md transition">
@@ -231,7 +233,7 @@ const BananaClassifier = () => {
                   />
                   <div className="text-center">
                     <p className="font-semibold text-sm text-gray-800 truncate">{formatClass(item.prediction)}</p>
-                    <p className="text-xs text-gray-500">{(item.confidence * 100).toFixed(0)}% Conf.</p>
+                    <p className="text-xs text-gray-500">{(item.confidence * 100).toFixed(0)}% {t('bananaClassifier.confAbbr')}</p>
                   </div>
                 </div>
               ))}

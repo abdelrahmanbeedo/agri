@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
+import { useLanguage } from "../i18n/LanguageContext";
 import Navbar from "../components/Navbar";
 import ProductCard from "../components/ProductCard";
 import { Search, SlidersHorizontal, Leaf, X } from "lucide-react";
@@ -8,6 +9,7 @@ import { Search, SlidersHorizontal, Leaf, X } from "lucide-react";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function TraderDashboard() {
+  const { t, isRTL } = useLanguage();
   useAuth(); // Auth context for consistency
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +26,7 @@ export default function TraderDashboard() {
       setError("");
     } catch (err) {
       console.error("Product fetch error:", err);
-      setError("Failed to load products.");
+      setError(t('farmer.failedLoad'));
     } finally {
       setLoading(false);
     }
@@ -76,11 +78,11 @@ export default function TraderDashboard() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-earth-50">
+      <div className="min-h-screen bg-earth-50" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-8">
-            <h1 className="text-2xl font-bold text-sage-900">Browse Products</h1>
-            <p className="text-sage-600 mt-1">Discover fresh products from local farmers</p>
+            <h1 className="text-2xl font-bold text-sage-900">{t('trader.browseProducts')}</h1>
+            <p className="text-sage-600 mt-1">{t('trader.discoverProducts')}</p>
           </div>
 
           <div className="bg-white rounded-2xl border border-sage-100 p-5 mb-6 shadow-soft">
@@ -89,7 +91,7 @@ export default function TraderDashboard() {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sage-400" />
                 <input
                   type="text"
-                  placeholder="Search products..."
+                  placeholder={t('trader.searchProducts')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-11 pr-4 py-3 border border-sage-200 rounded-xl text-sage-900 placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
@@ -102,7 +104,7 @@ export default function TraderDashboard() {
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   className="px-4 py-3 border border-sage-200 rounded-xl text-sage-900 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent min-w-[160px]"
                 >
-                  <option value="all">All Categories</option>
+                  <option value="all">{t('trader.allCategories')}</option>
                   {categories.map(cat => (
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
@@ -113,17 +115,17 @@ export default function TraderDashboard() {
                   onChange={(e) => setSortBy(e.target.value)}
                   className="px-4 py-3 border border-sage-200 rounded-xl text-sage-900 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
                 >
-                  <option value="newest">Newest</option>
-                  <option value="price-low">Price: Low</option>
-                  <option value="price-high">Price: High</option>
-                  <option value="quantity-high">Most Stock</option>
+                  <option value="newest">{t('trader.newest')}</option>
+                  <option value="price-low">{t('trader.priceLow')}</option>
+                  <option value="price-high">{t('trader.priceHigh')}</option>
+                  <option value="quantity-high">{t('trader.mostStock')}</option>
                 </select>
               </div>
             </div>
 
             <div className="flex items-center justify-between mt-4 pt-4 border-t border-sage-100">
               <p className="text-sm text-sage-600">
-                Showing <span className="font-medium text-sage-900">{filteredProducts.length}</span> of {products.length} products
+                {t('trader.showing')} <span className="font-medium text-sage-900">{filteredProducts.length}</span> {t('trader.of')} {products.length} {t('trader.products')}
               </p>
               {hasActiveFilters && (
                 <button
@@ -131,7 +133,7 @@ export default function TraderDashboard() {
                   className="flex items-center gap-1.5 text-sm text-sage-600 hover:text-sage-800 transition-colors"
                 >
                   <X className="w-4 h-4" />
-                  Clear filters
+                  {t('trader.clearFilters')}
                 </button>
               )}
             </div>
@@ -150,11 +152,11 @@ export default function TraderDashboard() {
               <div className="w-16 h-16 bg-sage-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Leaf className="w-8 h-8 text-sage-400" />
               </div>
-              <h3 className="text-lg font-medium text-sage-900 mb-2">No products found</h3>
+              <h3 className="text-lg font-medium text-sage-900 mb-2">{t('trader.noProductsFound')}</h3>
               <p className="text-sage-500">
                 {hasActiveFilters 
-                  ? "Try adjusting your search or filters" 
-                  : "No products available at the moment"}
+                  ? t('trader.adjustFilters')
+                  : t('trader.noProductsAvailable')}
               </p>
             </div>
           ) : (

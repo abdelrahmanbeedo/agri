@@ -1,11 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useLanguage } from "../i18n/LanguageContext";
 import axios from "axios";
 import { MessageCircle, BadgeDollarSign, Package, MapPin } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function ProductCard({ product }) {
+  const { t, isRTL } = useLanguage();
   const navigate = useNavigate();
   const { user, token } = useAuth();
 
@@ -30,7 +32,7 @@ export default function ProductCard({ product }) {
       navigate(`/messages?conversation=${res.data._id}`);
     } catch (err) {
       console.error("Contact farmer error:", err);
-      alert("Failed to start conversation.");
+      alert(t('productDetail.contactFarmerFailed'));
     }
   };
 
@@ -76,7 +78,7 @@ export default function ProductCard({ product }) {
               <span className="text-sm text-sage-500">EGP/{product.unit}</span>
             </div>
             <p className="text-sm text-sage-600 mt-1">
-              {product.quantity} {product.unit} available
+              {product.quantity} {product.unit} {t('productCard.available')}
             </p>
           </div>
 
@@ -94,18 +96,18 @@ export default function ProductCard({ product }) {
           <button
             onClick={handleContactFarmer}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border border-sage-200 text-sage-700 rounded-xl text-sm font-medium hover:bg-sage-50 hover:border-sage-300 transition-colors"
-            title="Message farmer"
+            title={t('productCard.messageFarmer')}
           >
             <MessageCircle className="w-4 h-4" />
-            Message
+            {t('productCard.message')}
           </button>
           <Link
             to={`/products/${product._id}`}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-sage-600 text-white rounded-xl text-sm font-medium hover:bg-sage-700 transition-colors"
-            title="View and order"
+            title={t('productCard.viewAndOrder')}
           >
             <BadgeDollarSign className="w-4 h-4" />
-            Order
+            {t('productCard.order')}
           </Link>
         </div>
       )}

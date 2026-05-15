@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
+import { useLanguage } from "../i18n/LanguageContext";
 import Navbar from "../components/Navbar";
 import ChatWindow from "../components/ChatWindow";
 import { MessageCircle, Package } from "lucide-react";
@@ -9,6 +10,7 @@ import { MessageCircle, Package } from "lucide-react";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function Messages() {
+  const { t, isRTL } = useLanguage();
   const { user, token } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -86,7 +88,7 @@ export default function Messages() {
     const now = new Date();
     const diff = now - d;
     
-    if (diff < 60000) return 'Just now';
+    if (diff < 60000) return t('messages.justNow');
     if (diff < 3600000) return `${Math.floor(diff / 60000)}m`;
     if (diff < 86400000) return `${Math.floor(diff / 3600000)}h`;
     return d.toLocaleDateString();
@@ -106,18 +108,18 @@ export default function Messages() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-earth-50">
+      <div className="min-h-screen bg-earth-50" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-2xl font-bold text-sage-900 mb-6">Messages</h1>
+          <h1 className="text-2xl font-bold text-sage-900 mb-6">{t('messages.messages')}</h1>
 
           <div className="bg-white rounded-2xl border border-sage-100 shadow-soft overflow-hidden h-[calc(100vh-12rem)]">
             <div className="grid grid-cols-1 lg:grid-cols-3 h-full">
               <div className={`${selectedConversation ? 'hidden lg:block' : ''} border-r border-sage-100 flex flex-col`}>
                 <div className="px-5 py-4 border-b border-sage-100 flex items-center justify-between">
-                  <h2 className="font-semibold text-sage-900">Conversations</h2>
+                  <h2 className="font-semibold text-sage-900">{t('messages.conversations')}</h2>
                   {unreadCount > 0 && (
                     <span className="px-2.5 py-1 text-xs font-medium bg-sage-100 text-sage-700 rounded-full">
-                      {unreadCount} unread
+                      {unreadCount} {t('messages.unread')}
                     </span>
                   )}
                 </div>
@@ -128,8 +130,8 @@ export default function Messages() {
                       <div className="w-12 h-12 bg-sage-100 rounded-full flex items-center justify-center mx-auto mb-3">
                         <MessageCircle className="w-6 h-6 text-sage-400" />
                       </div>
-                      <p className="text-sage-500">No conversations</p>
-                      <p className="text-sm text-sage-400 mt-1">Start chatting from a product page</p>
+                      <p className="text-sage-500">{t('messages.noConversations')}</p>
+                      <p className="text-sm text-sage-400 mt-1">{t('messages.startChatting')}</p>
                     </div>
                   ) : (
                     conversations.map((conv) => {
@@ -166,7 +168,7 @@ export default function Messages() {
                                 </p>
                               )}
                               <p className="text-sm text-sage-500 truncate mt-1">
-                                {conv.last_message || "No messages yet"}
+                                {conv.last_message || t('messages.noMessagesYet')}
                               </p>
                             </div>
                             <span className="text-xs text-sage-400 shrink-0">
@@ -196,8 +198,8 @@ export default function Messages() {
                       <div className="w-16 h-16 bg-sage-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <MessageCircle className="w-8 h-8 text-sage-400" />
                       </div>
-                      <h3 className="text-lg font-medium text-sage-900 mb-2">Select a conversation</h3>
-                      <p className="text-sage-500">Choose from your existing conversations or start a new one from a product page</p>
+                      <h3 className="text-lg font-medium text-sage-900 mb-2">{t('messages.selectConversation')}</h3>
+                      <p className="text-sage-500">{t('messages.selectConversationDesc')}</p>
                     </div>
                   </div>
                 )}

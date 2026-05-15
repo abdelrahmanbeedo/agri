@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
+import { useLanguage } from "../i18n/LanguageContext";
 import Navbar from "../components/Navbar";
 import PlaceOrderModal from "../components/PlaceOrderModal";
 import NegotiatePriceModal from "../components/NegotiatePriceModal";
@@ -12,6 +13,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t, isRTL } = useLanguage();
   const { user, isLoggedIn, token } = useAuth();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -29,7 +31,7 @@ export default function ProductDetail() {
         setError("");
       } catch (err) {
         console.error("Product fetch error:", err);
-        setError("Product not found or failed to load.");
+        setError(t('productDetail.productNotFound'));
       } finally {
         setLoading(false);
       }
@@ -55,7 +57,7 @@ export default function ProductDetail() {
       navigate(`/messages?conversation=${res.data._id}`);
     } catch (err) {
       console.error("Contact farmer error:", err);
-      alert("Failed to start conversation. Please try again.");
+      alert(t('productDetail.contactFarmerFailed'));
     }
   }
 
@@ -80,7 +82,7 @@ export default function ProductDetail() {
       navigate(`/negotiation/${res.data.session_id}`);
     } catch (err) {
       console.error("Start negotiation error:", err);
-      const errorMsg = err.response?.data?.error || err.response?.data?.msg || err.message || "Failed to start negotiation";
+      const errorMsg = err.response?.data?.error || err.response?.data?.msg || err.message || t('productDetail.startNegotiationFailed');
       alert(errorMsg);
       console.log("Full error response:", err.response?.data);
     } finally {
@@ -103,17 +105,17 @@ export default function ProductDetail() {
     return (
       <>
         <Navbar />
-        <div className="min-h-screen bg-earth-50 flex items-center justify-center">
+        <div className="min-h-screen bg-earth-50 flex items-center justify-center" dir={isRTL ? 'rtl' : 'ltr'}>
           <div className="text-center">
             <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <Package className="w-8 h-8 text-red-400" />
             </div>
-            <p className="text-red-600 mb-4">{error || "Product not found"}</p>
+            <p className="text-red-600 mb-4">{error || t('productDetail.productNotFound')}</p>
             <Link
               to={isLoggedIn ? (user?.role === "farmer" ? "/farmer" : "/trader") : "/"}
               className="text-sage-600 hover:text-sage-800 font-medium"
             >
-              Go back
+              {t('productDetail.goBack')}
             </Link>
           </div>
         </div>
@@ -124,14 +126,14 @@ export default function ProductDetail() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-earth-50 py-8">
+      <div className="min-h-screen bg-earth-50 py-8" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <button
             onClick={() => navigate(-1)}
             className="flex items-center gap-2 text-sage-600 hover:text-sage-800 mb-6 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            Back
+            {t('productDetail.back')}
           </button>
 
           <div className="bg-white rounded-2xl border border-sage-100 shadow-soft overflow-hidden">
@@ -148,7 +150,7 @@ export default function ProductDetail() {
                     <div className="w-20 h-20 bg-sage-100 rounded-full flex items-center justify-center mx-auto mb-3">
                       <Package className="w-10 h-10 text-sage-300" />
                     </div>
-                    <p className="text-sage-400">No image</p>
+                    <p className="text-sage-400">{t('productDetail.noImage')}</p>
                   </div>
                 )}
               </div>
@@ -179,11 +181,11 @@ export default function ProductDetail() {
                 <div className="py-5 border-y border-sage-100 mb-6">
                   <div className="grid grid-cols-2 gap-5">
                     <div>
-                      <p className="text-sm text-sage-500 mb-1">Available</p>
+                      <p className="text-sm text-sage-500 mb-1">{t('productDetail.available')}</p>
                       <p className="font-semibold text-sage-900">{product.quantity} {product.unit}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-sage-500 mb-1">Total Value</p>
+                      <p className="text-sm text-sage-500 mb-1">{t('productDetail.totalValue')}</p>
                       <p className="font-semibold text-sage-900">{(product.quantity * product.price_per_unit).toLocaleString()} EGP</p>
                     </div>
                   </div>
@@ -191,19 +193,19 @@ export default function ProductDetail() {
 
                 {product.description && (
                   <div className="mb-6">
-                    <h3 className="text-sm font-medium text-sage-700 mb-2">Description</h3>
+                    <h3 className="text-sm font-medium text-sage-700 mb-2">{t('productDetail.description')}</h3>
                     <p className="text-sage-600 leading-relaxed">{product.description}</p>
                   </div>
                 )}
 
                 <div className="mb-6">
-                  <h3 className="text-sm font-medium text-sage-700 mb-2">Farmer</h3>
+                  <h3 className="text-sm font-medium text-sage-700 mb-2">{t('productDetail.farmer')}</h3>
                   <div className="flex items-center gap-3 p-3 bg-sage-50 rounded-xl">
                     <div className="w-10 h-10 bg-sage-200 rounded-full flex items-center justify-center">
                       <User className="w-5 h-5 text-sage-600" />
                     </div>
                     <div>
-                      <p className="font-medium text-sage-900">{product.farmer_id?.name || "Unknown"}</p>
+                      <p className="font-medium text-sage-900">{product.farmer_id?.name || t('productDetail.unknown')}</p>
                       {product.farmer_id?.email && (
                         <p className="text-sm text-sage-500">{product.farmer_id.email}</p>
                       )}
@@ -218,7 +220,7 @@ export default function ProductDetail() {
                       className="w-full flex items-center justify-center gap-2 bg-sage-600 text-white py-3 rounded-xl font-medium hover:bg-sage-700 transition-colors"
                     >
                       <ShoppingCart className="w-5 h-5" />
-                      Place Order
+                      {t('productDetail.placeOrder')}
                     </button>
                     <button
                       onClick={handleStartNegotiation}
@@ -226,14 +228,14 @@ export default function ProductDetail() {
                       className="w-full flex items-center justify-center gap-2 bg-honey-500 text-white py-3 rounded-xl font-medium hover:bg-honey-600 transition-colors disabled:opacity-50"
                     >
                       <Zap className="w-5 h-5" />
-                      {startingNegotiation ? 'Starting...' : 'Formal Negotiation'}
+                      {startingNegotiation ? t('productDetail.starting') : t('productDetail.formalNegotiation')}
                     </button>
                     <button
                       onClick={handleContactFarmer}
                       className="w-full flex items-center justify-center gap-2 border border-sage-200 text-sage-700 py-3 rounded-xl font-medium hover:bg-sage-50 transition-colors"
                     >
                       <MessageCircle className="w-5 h-5" />
-                      Message Farmer
+                      {t('productDetail.messageFarmer')}
                     </button>
                   </div>
                 )}
@@ -241,7 +243,7 @@ export default function ProductDetail() {
                 {user?.role === "farmer" && product.farmer_id?._id === user.id && (
                   <div className="p-4 bg-sage-50 rounded-xl border border-sage-100">
                     <p className="text-sm text-sage-700">
-                      This is your product listing. You can manage it from your dashboard.
+                      {t('productDetail.yourListing')}
                     </p>
                   </div>
                 )}

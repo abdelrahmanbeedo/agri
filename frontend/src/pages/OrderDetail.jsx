@@ -2,20 +2,21 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
+import { useLanguage } from "../i18n/LanguageContext";
 import Navbar from "../components/Navbar";
 import { ArrowLeft, Check, X, CreditCard, MapPin, User, Package } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-const STATUS_CONFIG = {
-  pending: { bg: "bg-honey-50", text: "text-honey-700", label: "Pending" },
-  accepted: { bg: "bg-blue-50", text: "text-blue-700", label: "Accepted" },
-  rejected: { bg: "bg-red-50", text: "text-red-700", label: "Rejected" },
-  completed: { bg: "bg-sage-50", text: "text-sage-700", label: "Completed" },
-  cancelled: { bg: "bg-earth-100", text: "text-earth-600", label: "Cancelled" },
-};
-
 export default function OrderDetail() {
+  const { t, isRTL } = useLanguage();
+  const STATUS_CONFIG = {
+    pending: { bg: "bg-honey-50", text: "text-honey-700", label: t('orders.pending') },
+    accepted: { bg: "bg-blue-50", text: "text-blue-700", label: t('orders.accepted') },
+    rejected: { bg: "bg-red-50", text: "text-red-700", label: t('orders.rejected') },
+    completed: { bg: "bg-sage-50", text: "text-sage-700", label: t('orders.completed') },
+    cancelled: { bg: "bg-earth-100", text: "text-earth-600", label: t('orders.cancelled') },
+  };
   const { orderId } = useParams();
   const navigate = useNavigate();
   const { user, token } = useAuth();
@@ -36,7 +37,7 @@ export default function OrderDetail() {
     } catch (err) {
       console.error("Fetch order error:", err);
       if (err.response?.status === 403) {
-        alert("You don't have permission to view this order");
+        alert(t('orderDetail.noPermission'));
         navigate("/orders");
       }
     } finally {
@@ -45,7 +46,7 @@ export default function OrderDetail() {
   }
 
   async function handleUpdateStatus(status) {
-    if (!window.confirm(`Are you sure you want to ${status} this order?`)) {
+    if (!window.confirm(`${t('orders.confirmStatus')} ${status} ${t('orders.thisOrder')}`)) {
       return;
     }
 
@@ -59,14 +60,14 @@ export default function OrderDetail() {
       fetchOrder();
     } catch (err) {
       console.error("Update order status error:", err);
-      alert(err.response?.data?.msg || "Failed to update order status");
+      alert(err.response?.data?.msg || t('orders.updateFailed'));
     } finally {
       setActionLoading(false);
     }
   }
 
   async function handleCreateTransaction() {
-    if (!window.confirm("Create transaction for this order?")) {
+    if (!window.confirm(t('orderDetail.confirmTransaction'))) {
       return;
     }
 
@@ -78,10 +79,10 @@ export default function OrderDetail() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       fetchOrder();
-      alert("Transaction created successfully!");
+      alert(t('orderDetail.transactionCreated'));
     } catch (err) {
       console.error("Create transaction error:", err);
-      alert(err.response?.data?.msg || "Failed to create transaction");
+      alert(err.response?.data?.msg || t('orderDetail.transactionFailed'));
     } finally {
       setActionLoading(false);
     }
@@ -103,7 +104,7 @@ export default function OrderDetail() {
       <>
         <Navbar />
         <div className="min-h-screen bg-earth-50 flex items-center justify-center">
-          <p className="text-sage-500">Order not found</p>
+          <p className="text-sage-500">{t('orderDetail.orderNotFound')}</p>
         </div>
       </>
     );
@@ -116,27 +117,27 @@ export default function OrderDetail() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-earth-50 py-8">
+      <div className="min-h-screen bg-earth-50 py-8" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <button
             onClick={() => navigate("/orders")}
             className="flex items-center gap-2 text-sage-600 hover:text-sage-800 mb-6 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            Back to Orders
+            {t('orderDetail.backToOrders')}
           </button>
 
           <div className="bg-white rounded-2xl border border-sage-100 shadow-soft overflow-hidden">
             <div className="px-6 py-5 border-b border-sage-100 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <h1 className="text-xl font-bold text-sage-900">Order Details</h1>
+                <h1 className="text-xl font-bold text-sage-900">{t('orderDetail.orderDetails')}</h1>
                 <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${statusConfig.bg} ${statusConfig.text}`}>
                   {statusConfig.label}
                 </span>
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-sage-900">{order.total_price.toLocaleString()} EGP</p>
-                <p className="text-sm text-sage-500">Total Amount</p>
+                <p className="text-sm text-sage-500">{t('orderDetail.totalAmount')}</p>
               </div>
             </div>
 
@@ -145,7 +146,7 @@ export default function OrderDetail() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 text-sage-500 mb-2">
                     <Package className="w-4 h-4" />
-                    <span className="text-sm font-medium">Product</span>
+                    <span className="text-sm font-medium">{t('orderDetail.product')}</span>
                   </div>
                   <Link
                     to={`/products/${order.product_id._id}`}
@@ -161,7 +162,7 @@ export default function OrderDetail() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 text-sage-500 mb-2">
                     <User className="w-4 h-4" />
-                    <span className="text-sm font-medium">{isBuyer ? "Seller" : "Buyer"}</span>
+                    <span className="text-sm font-medium">{isBuyer ? t('orderDetail.seller') : t('orderDetail.buyer')}</span>
                   </div>
                   <p className="font-semibold text-sage-900">
                     {isBuyer ? order.seller_id.name : order.buyer_id.name}
@@ -176,7 +177,7 @@ export default function OrderDetail() {
                 <div>
                   <div className="flex items-center gap-2 text-sage-500 mb-2">
                     <MapPin className="w-4 h-4" />
-                    <span className="text-sm font-medium">Delivery Address</span>
+                    <span className="text-sm font-medium">{t('orderDetail.deliveryAddress')}</span>
                   </div>
                   <p className="text-sage-700">{order.delivery_address}</p>
                 </div>
@@ -184,14 +185,14 @@ export default function OrderDetail() {
 
               {order.buyer_notes && (
                 <div className="p-4 bg-blue-50 rounded-xl">
-                  <p className="text-sm font-medium text-blue-800 mb-1">Buyer Notes</p>
+                  <p className="text-sm font-medium text-blue-800 mb-1">{t('orderDetail.buyerNotes')}</p>
                   <p className="text-blue-700">{order.buyer_notes}</p>
                 </div>
               )}
 
               {order.seller_notes && (
                 <div className="p-4 bg-sage-50 rounded-xl">
-                  <p className="text-sm font-medium text-sage-800 mb-1">Seller Notes</p>
+                  <p className="text-sm font-medium text-sage-800 mb-1">{t('orderDetail.sellerNotes')}</p>
                   <p className="text-sage-700">{order.seller_notes}</p>
                 </div>
               )}
@@ -200,23 +201,23 @@ export default function OrderDetail() {
                 <div className="p-5 bg-earth-50 rounded-xl border border-earth-100">
                   <div className="flex items-center gap-2 text-sage-700 mb-3">
                     <CreditCard className="w-5 h-5" />
-                    <span className="font-semibold">Transaction</span>
+                    <span className="font-semibold">{t('orderDetail.transaction')}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <p className="text-sage-500">Status</p>
+                      <p className="text-sage-500">{t('orderDetail.status')}</p>
                       <p className="font-medium text-sage-900 capitalize">{order.transaction_id.status}</p>
                     </div>
                     <div>
-                      <p className="text-sage-500">Payment Method</p>
+                      <p className="text-sage-500">{t('orderDetail.paymentMethod')}</p>
                       <p className="font-medium text-sage-900 capitalize">{order.transaction_id.payment_method}</p>
                     </div>
                     <div>
-                      <p className="text-sage-500">Amount</p>
+                      <p className="text-sage-500">{t('orderDetail.amount')}</p>
                       <p className="font-medium text-sage-900">{order.transaction_id.amount.toLocaleString()} EGP</p>
                     </div>
                     <div>
-                      <p className="text-sage-500">Created</p>
+                      <p className="text-sage-500">{t('orderDetail.created')}</p>
                       <p className="font-medium text-sage-900">{new Date(order.transaction_id.created_at).toLocaleDateString()}</p>
                     </div>
                   </div>
@@ -233,14 +234,14 @@ export default function OrderDetail() {
                       disabled={actionLoading}
                       className="flex items-center gap-2 px-5 py-2.5 bg-sage-600 text-white rounded-xl font-medium hover:bg-sage-700 disabled:opacity-50 transition-colors"
                     >
-                      <Check className="w-4 h-4" /> Accept
+                      <Check className="w-4 h-4" /> {t('orders.accept')}
                     </button>
                     <button
                       onClick={() => handleUpdateStatus("rejected")}
                       disabled={actionLoading}
                       className="flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 disabled:opacity-50 transition-colors"
                     >
-                      <X className="w-4 h-4" /> Reject
+                      <X className="w-4 h-4" /> {t('orders.reject')}
                     </button>
                   </>
                 )}
@@ -250,7 +251,7 @@ export default function OrderDetail() {
                     disabled={actionLoading}
                     className="flex items-center gap-2 px-5 py-2.5 border border-sage-200 text-sage-700 rounded-xl font-medium hover:bg-sage-50 disabled:opacity-50 transition-colors"
                   >
-                    <X className="w-4 h-4" /> Cancel
+                    <X className="w-4 h-4" /> {t('orders.cancel')}
                   </button>
                 )}
                 {order.status === "accepted" && isSeller && (
@@ -259,7 +260,7 @@ export default function OrderDetail() {
                     disabled={actionLoading}
                     className="flex items-center gap-2 px-5 py-2.5 bg-sage-600 text-white rounded-xl font-medium hover:bg-sage-700 disabled:opacity-50 transition-colors"
                   >
-                    <Check className="w-4 h-4" /> Mark Complete
+                    <Check className="w-4 h-4" /> {t('orderDetail.markComplete')}
                   </button>
                 )}
                 {order.status === "accepted" && isBuyer && !order.transaction_id && (
@@ -268,7 +269,7 @@ export default function OrderDetail() {
                     disabled={actionLoading}
                     className="flex items-center gap-2 px-5 py-2.5 bg-sage-600 text-white rounded-xl font-medium hover:bg-sage-700 disabled:opacity-50 transition-colors"
                   >
-                    <CreditCard className="w-4 h-4" /> Create Transaction
+                    <CreditCard className="w-4 h-4" /> {t('orderDetail.createTransaction')}
                   </button>
                 )}
               </div>
