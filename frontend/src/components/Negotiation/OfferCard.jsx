@@ -22,7 +22,7 @@ export default function OfferCard({ offer, party, isLatest = false, analysis = n
   };
 
   return (
-    <div className={`rounded-2xl border p-5 transition-all ${isLatest ? 'bg-sage-50 border-sage-300' : 'bg-white border-sage-100'}`}>
+    <div className={`rounded-2xl border p-5 transition-all ${isLatest ? 'bg-sage-50 border-sage-300' : 'bg-white/80 backdrop-blur-sm border-sage-100'}`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium ${

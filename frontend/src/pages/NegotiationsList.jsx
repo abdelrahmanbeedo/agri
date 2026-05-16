@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../i18n/LanguageContext';
-import Navbar from '../components/Navbar';
 import { Package, Clock, Check, X, MessageSquare, ArrowRight } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -44,7 +43,7 @@ export default function NegotiationsList() {
       case 'rejected':
         return <span className="px-2 py-1 bg-red-50 text-red-700 text-xs font-medium rounded-full">Declined</span>;
       case 'expired':
-        return <span className="px-2 py-1 bg-gray-50 text-gray-700 text-xs font-medium rounded-full">Expired</span>;
+        return <span className="px-2 py-1 bg-sage-50/60 text-gray-700 text-xs font-medium rounded-full">Expired</span>;
       default:
         return <span className="px-2 py-1 bg-sage-50 text-sage-700 text-xs font-medium rounded-full">{status}</span>;
     }
@@ -60,9 +59,7 @@ export default function NegotiationsList() {
   };
 
   return (
-    <>
-      <Navbar />
-      <div className="min-h-screen bg-earth-50">
+      <div className="min-h-screen bg-sage-50/30 pt-16 md:pt-18">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between mb-8">
             <div>
@@ -156,6 +153,5 @@ export default function NegotiationsList() {
           )}
         </div>
       </div>
-    </>
   );
 }

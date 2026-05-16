@@ -92,8 +92,8 @@ const BananaClassifier = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center py-12 px-4 sm:px-6 lg:px-8" dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="max-w-3xl w-full space-y-8 bg-white p-10 rounded-xl shadow-lg">
+    <div className="min-h-screen bg-sage-50/30 flex flex-col items-center py-12 px-4 sm:px-6 lg:px-8" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="max-w-3xl w-full space-y-8 bg-white/80 backdrop-blur-sm p-10 rounded-2xl shadow-lg border border-sage-100">
         
         {/* Header */}
         <div className="text-center">
@@ -110,7 +110,7 @@ const BananaClassifier = () => {
           <div
             {...getRootProps()}
             className={`border-4 border-dashed rounded-xl p-12 flex flex-col items-center justify-center cursor-pointer transition-colors duration-300 ${
-              isDragActive ? "border-green-500 bg-green-50" : "border-gray-300 hover:border-green-400 hover:bg-gray-50"
+              isDragActive ? "border-sage-500 bg-sage-50" : "border-sage-300 hover:border-sage-400 hover:bg-sage-50"
             }`}
           >
             <input {...getInputProps()} />
@@ -225,7 +225,7 @@ const BananaClassifier = () => {
             <h3 className="text-xl font-bold text-gray-800 mb-4">{t('bananaClassifier.recentScans')}</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4">
               {history.map((item) => (
-                <div key={item._id} className="bg-gray-50 rounded-lg p-2 border hover:shadow-md transition">
+                <div key={item._id} className="bg-sage-50/60 rounded-lg p-2 border border-sage-100 hover:shadow-md transition">
                   <img 
                     src={item.image_url} 
                     alt={item.prediction} 

@@ -2,12 +2,10 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../i18n/LanguageContext";
-import Navbar from "../components/Navbar";
 import { Link } from "react-router-dom";
-import { Plus, Package, Trash2, ExternalLink, AlertCircle, ImageUp, X } from "lucide-react";
+import { Plus, Package, Trash2, ExternalLink, AlertCircle, ImageUp, X, TrendingUp, DollarSign, BarChart3, Eye } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-
 const CATEGORIES = ["Vegetables", "Fruits", "Grains", "Dairy", "Livestock", "Other"];
 const UNITS = ["kg", "ton", "crate", "piece", "bag", "liter", "dozen"];
 
@@ -16,12 +14,7 @@ export default function FarmerDashboard() {
   const { token } = useAuth();
   const [products, setProducts] = useState([]);
   const [formData, setFormData] = useState({
-    title: "",
-    price_per_unit: "",
-    quantity: "",
-    category: "",
-    unit: "kg",
-    description: "",
+    title: "", price_per_unit: "", quantity: "", category: "", unit: "kg", description: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -35,354 +28,238 @@ export default function FarmerDashboard() {
         headers: { Authorization: `Bearer ${token}` },
       });
       setProducts(res.data);
-    } catch (err) {
-      console.error("Product fetch error:", err);
-      setError(t('farmer.failedLoad'));
-    }
+    } catch { setError(t('farmer.failedLoad')); }
   }
 
-  useEffect(() => {
-    if (token) {
-      fetchProducts();
-    }
-  }, [token]);
+  useEffect(() => { if (token) fetchProducts(); }, [token]);
+
+  const totalValue = products.reduce((sum, p) => sum + (p.quantity * p.price_per_unit), 0);
+  const activeCount = products.filter(p => p.status === "active").length;
+  const totalQty = products.reduce((sum, p) => sum + p.quantity, 0);
 
   async function handleAddProduct(e) {
     e.preventDefault();
     setError("");
     setLoading(true);
-
-    if (!formData.title || !formData.price_per_unit || !formData.quantity || !formData.category || !formData.unit) {
-      setError(t('farmer.fillRequired'));
-      setLoading(false);
-      return;
+    if (!formData.title || !formData.price_per_unit || !formData.quantity || !formData.category) {
+      setError(t('farmer.fillRequired')); setLoading(false); return;
     }
-
     if (Number(formData.price_per_unit) <= 0 || Number(formData.quantity) <= 0) {
-      setError(t('farmer.priceQuantityPositive'));
-      setLoading(false);
-      return;
+      setError(t('farmer.priceQuantityPositive')); setLoading(false); return;
     }
-
     try {
-      const res = await axios.post(
-        `${API_URL}/api/products`,
-        {
-          title: formData.title,
-          price_per_unit: Number(formData.price_per_unit),
-          quantity: Number(formData.quantity),
-          category: formData.category,
-          unit: formData.unit,
-          description: formData.description || "",
-          images: uploadedImages,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
+      const res = await axios.post(`${API_URL}/api/products`, {
+        title: formData.title, price_per_unit: Number(formData.price_per_unit),
+        quantity: Number(formData.quantity), category: formData.category,
+        unit: formData.unit, description: formData.description || "", images: uploadedImages,
+      }, { headers: { Authorization: `Bearer ${token}` } });
       setProducts([res.data, ...products]);
-      setFormData({
-        title: "",
-        price_per_unit: "",
-        quantity: "",
-        category: "",
-        unit: "kg",
-        description: "",
-      });
-      setUploadedImages([]);
-      setFormExpanded(false);
-      setError("");
+      setFormData({ title: "", price_per_unit: "", quantity: "", category: "", unit: "kg", description: "" });
+      setUploadedImages([]); setFormExpanded(false); setError("");
     } catch (err) {
-      console.error("Product creation error:", err.response?.data || err.message);
       setError(err.response?.data?.msg || t('farmer.createError'));
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }
 
   async function handleDeleteProduct(productId) {
-    if (!window.confirm(t('farmer.deleteConfirm'))) {
-      return;
-    }
-
+    if (!window.confirm(t('farmer.deleteConfirm'))) return;
     try {
       await axios.delete(`${API_URL}/api/products/${productId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setProducts(products.filter(p => p._id !== productId));
-    } catch (err) {
-      console.error("Delete error:", err);
-      alert(t('farmer.deleteFailed'));
-    }
+    } catch { alert(t('farmer.deleteFailed')); }
   }
 
   return (
-    <>
-      <Navbar />
-      <div className="min-h-screen bg-earth-50" dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-2xl font-bold text-sage-900">{t('farmer.myProducts')}</h1>
-              <p className="text-sage-600 mt-1">{t('farmer.manageListings')}</p>
-            </div>
-            <button
-              onClick={() => setFormExpanded(!formExpanded)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-sage-600 text-white rounded-xl font-medium hover:bg-sage-700 transition-colors shadow-lg shadow-sage-600/20"
-            >
-              <Plus className="w-5 h-5" />
-              {t('farmer.addProduct')}
-            </button>
+    <div className="min-h-screen bg-sage-50/30 pt-16 md:pt-18" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="page-container">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{t('farmer.myProducts')}</h1>
+            <p className="text-gray-500 mt-1">{t('farmer.manageListings')}</p>
           </div>
+          <button onClick={() => setFormExpanded(!formExpanded)}
+            className="btn btn-primary btn-lg">
+            <Plus className="w-5 h-5" />
+            {t('farmer.addProduct')}
+          </button>
+        </div>
 
-          {formExpanded && (
-            <div className="bg-white rounded-2xl border border-sage-100 p-6 mb-6 shadow-soft">
-              <h2 className="text-lg font-semibold text-sage-900 mb-5">{t('farmer.addNewProduct')}</h2>
-
-              {error && (
-                <div className="mb-5 p-3 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  {error}
+        {/* Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {[
+            { icon: Package, label: t('farmer.totalProducts'), value: products.length },
+            { icon: Eye, label: t('farmer.activeListings'), value: activeCount },
+            { icon: BarChart3, label: t('farmer.totalQuantity'), value: `${totalQty.toLocaleString()} ${t('farmer.units')}` },
+            { icon: TrendingUp, label: t('farmer.totalValue'), value: `${totalValue.toLocaleString()} EGP` },
+          ].map((stat, i) => (
+            <div key={i} className="stat-card animate-slideUp" style={{ animationDelay: `${i * 80}ms` }}>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sage-100 to-sage-50 flex items-center justify-center">
+                  <stat.icon className="w-5 h-5 text-sage-600" />
                 </div>
-              )}
-
-              <form onSubmit={handleAddProduct} className="space-y-5">
-                <div>
-                  <label className="block text-sm font-medium text-sage-700 mb-2">
-                    {t('farmer.productTitle')} <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder={t('farmer.titlePlaceholder')}
-                    className="w-full px-4 py-3 border border-sage-200 rounded-xl text-sage-900 placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-sage-700 mb-2">
-                      {t('farmer.pricePerUnitEGP')} <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      placeholder={t('farmer.pricePlaceholder')}
-                      className="w-full px-4 py-3 border border-sage-200 rounded-xl text-sage-900 placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
-                      value={formData.price_per_unit}
-                      onChange={(e) => setFormData({ ...formData, price_per_unit: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-sage-700 mb-2">
-                      {t('farmer.quantity')} <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      placeholder={t('farmer.quantityPlaceholder')}
-                      className="w-full px-4 py-3 border border-sage-200 rounded-xl text-sage-900 placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
-                      value={formData.quantity}
-                      onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-sage-700 mb-2">
-                      {t('farmer.unit')} <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      className="w-full px-4 py-3 border border-sage-200 rounded-xl text-sage-900 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
-                      value={formData.unit}
-                      onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                      required
-                    >
-                      {UNITS.map(unit => (
-                        <option key={unit} value={unit}>{unit}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-sage-700 mb-2">
-                    {t('farmer.category')} <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    className="w-full px-4 py-3 border border-sage-200 rounded-xl text-sage-900 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    required
-                  >
-                    <option value="">{t('farmer.selectCategory')}</option>
-                    {CATEGORIES.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-sage-700 mb-2">
-                    {t('farmer.description')}
-                  </label>
-                  <textarea
-                    placeholder={t('farmer.descriptionPlaceholder')}
-                    rows="3"
-                    className="w-full px-4 py-3 border border-sage-200 rounded-xl text-sage-900 placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent resize-none"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-sage-700 mb-2">{t('upload.uploadImage')}</label>
-                  <div className="flex flex-wrap gap-3 mb-3">
-                    {uploadedImages.map((url, i) => (
-                      <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden border border-sage-200">
-                        <img src={url} alt="" className="w-full h-full object-cover" />
-                        <button type="button" onClick={() => setUploadedImages(uploadedImages.filter((_, j) => j !== i))}
-                          className="absolute top-0.5 right-0.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center">
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
-                    {uploadedImages.length < 5 && (
-                      <label className="w-20 h-20 border-2 border-dashed border-sage-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-sage-500 transition-colors">
-                        <ImageUp className="w-5 h-5 text-sage-400" />
-                        <span className="text-xs text-sage-400 mt-1">{t('upload.uploadImage')}</span>
-                        <input type="file" accept="image/*" className="hidden" disabled={uploadingImage}
-                          onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-                            setUploadingImage(true);
-                            const fd = new FormData();
-                            fd.append('image', file);
-                            try {
-                              const res = await axios.post(`${API_URL}/api/upload`, fd, {
-                                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
-                              });
-                              setUploadedImages([...uploadedImages, res.data.url]);
-                            } catch { setError(t('upload.uploadFailed')); }
-                            finally { setUploadingImage(false); }
-                          }} />
-                      </label>
-                    )}
-                  </div>
-                  <p className="text-xs text-sage-400">{t('upload.maxSize')}</p>
-                </div>
-
-                <div className="flex gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => { setFormExpanded(false); setUploadedImages([]); }}
-                    className="px-6 py-3 border border-sage-200 text-sage-700 rounded-xl font-medium hover:bg-sage-50 transition-colors"
-                  >
-                    {t('common.cancel')}
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="px-6 py-3 bg-sage-600 text-white rounded-xl font-medium hover:bg-sage-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {loading ? t('farmer.adding') : t('farmer.addProduct')}
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          <div className="bg-white rounded-2xl border border-sage-100 shadow-soft">
-            <div className="px-6 py-4 border-b border-sage-100 flex items-center justify-between">
-              <h2 className="font-semibold text-sage-900">{t('farmer.yourListings')}</h2>
-              <span className="text-sm text-sage-500">
-                {products.length} {products.length === 1 ? t('farmer.productCount') : t('farmer.productCountPlural')}
-              </span>
-            </div>
-
-            {products.length === 0 ? (
-              <div className="p-12 text-center">
-                <div className="w-16 h-16 bg-sage-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Package className="w-8 h-8 text-sage-400" />
-                </div>
-                <h3 className="text-lg font-medium text-sage-900 mb-2">{t('farmer.noProducts')}</h3>
-                <p className="text-sage-500 mb-5">{t('farmer.noProductsDesc')}</p>
-                <button
-                  onClick={() => setFormExpanded(true)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-sage-600 text-white rounded-xl font-medium hover:bg-sage-700 transition-colors"
-                >
-                  <Plus className="w-5 h-5" />
-                  {t('farmer.addProduct')}
-                </button>
+                <span className="stat-label">{stat.label}</span>
               </div>
-            ) : (
-              <div className="divide-y divide-sage-100">
-                {products.map((p) => (
-                  <div key={p._id} className="p-5 hover:bg-sage-50/50 transition-colors">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                      <div className="flex items-start gap-4 flex-1 min-w-0">
-                        <div className="w-16 h-16 bg-sage-100 rounded-xl overflow-hidden shrink-0">
-                          {p.images && p.images.length > 0 ? (
-                            <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Package className="w-6 h-6 text-sage-300" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-sage-900 truncate">{p.title}</h3>
-                            <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                              p.status === "active" 
-                                ? "bg-sage-100 text-sage-700" 
-                                : "bg-earth-100 text-earth-600"
-                            }`}>
-                              {p.status}
-                            </span>
-                          </div>
-                          <p className="text-sm text-sage-500">{p.category}</p>
-                          <div className="flex items-center gap-4 mt-2 text-sm">
-                            <span className="text-sage-700">
-                              <span className="font-medium text-sage-900">{p.price_per_unit}</span> EGP/{p.unit}
-                            </span>
-                            <span className="text-sage-500">{p.quantity} {p.unit}</span>
-                            <span className="text-sage-500">
-                              {t('farmer.total')} <span className="font-medium text-sage-700">{(p.quantity * p.price_per_unit).toLocaleString()} EGP</span>
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 sm:shrink-0">
-                        <Link
-                          to={`/products/${p._id}`}
-                          className="flex items-center gap-1.5 px-4 py-2 text-sage-700 border border-sage-200 rounded-xl text-sm font-medium hover:bg-sage-50 transition-colors"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                          {t('common.view')}
-                        </Link>
-                        <button
-                          onClick={() => handleDeleteProduct(p._id)}
-                          className="flex items-center gap-1.5 px-4 py-2 text-red-600 border border-red-100 rounded-xl text-sm font-medium hover:bg-red-50 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          {t('common.delete')}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div className="stat-value">{stat.value}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Product Form */}
+        {formExpanded && (
+          <div className="card p-6 mb-8 animate-slideDown">
+            <h2 className="text-lg font-semibold text-gray-900 mb-6">{t('farmer.addNewProduct')}</h2>
+            {error && (
+              <div className="mb-5 p-3.5 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                <span>{error}</span>
               </div>
             )}
+            <form onSubmit={handleAddProduct} className="space-y-5">
+              <div>
+                <label className="label">{t('farmer.productTitle')} <span className="text-red-400">*</span></label>
+                <input type="text" placeholder={t('farmer.titlePlaceholder')} className="input" value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })} required />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="label">{t('farmer.pricePerUnitEGP')} <span className="text-red-400">*</span></label>
+                  <input type="number" step="0.01" min="0" placeholder={t('farmer.pricePlaceholder')} className="input"
+                    value={formData.price_per_unit} onChange={(e) => setFormData({ ...formData, price_per_unit: e.target.value })} required />
+                </div>
+                <div>
+                  <label className="label">{t('farmer.quantity')} <span className="text-red-400">*</span></label>
+                  <input type="number" min="1" placeholder={t('farmer.quantityPlaceholder')} className="input"
+                    value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} required />
+                </div>
+                <div>
+                  <label className="label">{t('farmer.unit')} <span className="text-red-400">*</span></label>
+                  <select className="select" value={formData.unit}
+                    onChange={(e) => setFormData({ ...formData, unit: e.target.value })} required>
+                    {UNITS.map(unit => (<option key={unit} value={unit}>{unit}</option>))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="label">{t('farmer.category')} <span className="text-red-400">*</span></label>
+                <select className="select" value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })} required>
+                  <option value="">{t('farmer.selectCategory')}</option>
+                  {CATEGORIES.map(cat => (<option key={cat} value={cat}>{cat}</option>))}
+                </select>
+              </div>
+              <div>
+                <label className="label">{t('farmer.description')}</label>
+                <textarea placeholder={t('farmer.descriptionPlaceholder')} rows="3" className="input resize-none"
+                  value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
+              </div>
+              <div>
+                <label className="label">{t('upload.uploadImage')}</label>
+                <div className="flex flex-wrap gap-3 mb-2">
+                  {uploadedImages.map((url, i) => (
+                    <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200 group/image">
+                      <img src={url} alt="" className="w-full h-full object-cover" />
+                      <button type="button" onClick={() => setUploadedImages(uploadedImages.filter((_, j) => j !== i))}
+                        className="absolute inset-0 bg-black/40 opacity-0 group-hover/image:opacity-100 transition-opacity flex items-center justify-center">
+                        <X className="w-5 h-5 text-white" />
+                      </button>
+                    </div>
+                  ))}
+                  {uploadedImages.length < 5 && (
+                    <label className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-sage-400 hover:bg-sage-50/30 transition-all duration-200">
+                      <ImageUp className="w-5 h-5 text-gray-400" />
+                      <span className="text-xs text-gray-400 mt-1">{uploadingImage ? '...' : t('upload.uploadImage')}</span>
+                      <input type="file" accept="image/*" className="hidden" disabled={uploadingImage}
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0]; if (!file) return;
+                          setUploadingImage(true);
+                          const fd = new FormData(); fd.append('image', file);
+                          try {
+                            const res = await axios.post(`${API_URL}/api/upload`, fd, {
+                              headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+                            });
+                            setUploadedImages([...uploadedImages, res.data.url]);
+                          } catch { setError(t('upload.uploadFailed')); }
+                          finally { setUploadingImage(false); }
+                        }} />
+                    </label>
+                  )}
+                </div>
+                <p className="text-xs text-gray-400">{t('upload.maxSize')}</p>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => { setFormExpanded(false); setUploadedImages([]); }}
+                  className="btn btn-secondary">{t('common.cancel')}</button>
+                <button type="submit" disabled={loading} className="btn btn-primary">
+                  {loading ? <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> {t('farmer.adding')}</span> : t('farmer.addProduct')}
+                </button>
+              </div>
+            </form>
           </div>
+        )}
+
+        {/* Products List */}
+        <div className="card">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-sage-100">
+            <h2 className="font-semibold text-gray-900">{t('farmer.yourListings')}</h2>
+            <span className="text-sm text-gray-500">{products.length} {products.length === 1 ? t('farmer.productCount') : t('farmer.productCountPlural')}</span>
+          </div>
+
+          {products.length === 0 ? (
+            <div className="empty-state">
+              <Package className="w-12 h-12 text-gray-300" />
+              <h3>{t('farmer.noProducts')}</h3>
+              <p>{t('farmer.noProductsDesc')}</p>
+              <button onClick={() => setFormExpanded(true)} className="btn btn-primary mt-6">
+                <Plus className="w-4 h-4" /> {t('farmer.addProduct')}
+              </button>
+            </div>
+          ) : (
+            <div className="divide-y divide-sage-100">
+              {products.map((p, i) => (
+                <div key={p._id} className="p-5 hover:bg-sage-50/40 transition-colors animate-fadeIn" style={{ animationDelay: `${i * 50}ms` }}>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <div className="flex items-start gap-4 flex-1 min-w-0">
+                      <div className="w-16 h-16 bg-sage-50 rounded-xl overflow-hidden shrink-0 border border-sage-100">
+                        {p.images && p.images.length > 0 ? (
+                          <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Package className="w-6 h-6 text-sage-300" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2.5 mb-1">
+                          <h3 className="font-semibold text-gray-900 truncate">{p.title}</h3>
+                          <span className={`badge ${p.status === "active" ? "badge-success" : "badge-neutral"}`}>{p.status}</span>
+                        </div>
+                        <p className="text-sm text-gray-400">{p.category}</p>
+                        <div className="flex items-center gap-4 mt-2 text-sm">
+                          <span className="text-gray-700 font-medium">{Number(p.price_per_unit).toLocaleString()} <span className="text-gray-500 font-normal">EGP/{p.unit}</span></span>
+                          <span className="text-gray-500">{p.quantity.toLocaleString()} {p.unit}</span>
+                          <span className="text-gray-600">{(p.quantity * p.price_per_unit).toLocaleString()} EGP</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 sm:shrink-0">
+                      <Link to={`/products/${p._id}`} className="btn btn-secondary btn-sm">
+                        <Eye className="w-3.5 h-3.5" />
+                        {t('common.view')}
+                      </Link>
+                      <button onClick={() => handleDeleteProduct(p._id)} className="btn btn-danger btn-sm">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
-    </>
+    </div>
   );
 }

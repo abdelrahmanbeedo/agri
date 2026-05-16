@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../i18n/LanguageContext';
-import Navbar from '../../components/Navbar';
 import { LayoutDashboard, Users, Package, ShoppingCart, MessageSquare, Zap, TrendingUp, TrendingDown } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -33,12 +32,9 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <>
-        <Navbar />
-        <div className="min-h-screen bg-earth-50 flex items-center justify-center">
-          <div className="w-10 h-10 border-3 border-sage-200 border-t-sage-600 rounded-full animate-spin" />
-        </div>
-      </>
+      <div className="min-h-screen bg-sage-50/30 pt-16 md:pt-18 flex items-center justify-center">
+        <div className="w-10 h-10 border-2 border-gray-200 border-t-sage-600 rounded-full animate-spin" />
+      </div>
     );
   }
 
@@ -51,9 +47,7 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <>
-      <Navbar />
-      <div className="min-h-screen bg-earth-50">
+      <div className="min-h-screen bg-sage-50/30 pt-16 md:pt-18">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center gap-3 mb-8">
             <LayoutDashboard className="w-8 h-8 text-sage-600" />
@@ -62,7 +56,7 @@ export default function AdminDashboard() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {cards.map((card, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-sage-100 p-6 hover:shadow-soft transition-shadow">
+              <div key={i} className="bg-white/80 backdrop-blur-sm rounded-2xl border border-sage-100 p-6 hover:shadow-soft transition-shadow">
                 <div className={`w-12 h-12 rounded-xl ${card.color} flex items-center justify-center mb-4`}>
                   <card.icon className="w-6 h-6" />
                 </div>
@@ -74,7 +68,7 @@ export default function AdminDashboard() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-2xl border border-sage-100 p-6">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-sage-100 p-6">
               <h2 className="font-semibold text-sage-900 mb-4">{t('admin.recentOrders')}</h2>
               {stats?.recentOrders?.length > 0 ? (
                 <div className="space-y-3">
@@ -95,7 +89,7 @@ export default function AdminDashboard() {
               )}
             </div>
 
-            <div className="bg-white rounded-2xl border border-sage-100 p-6">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-sage-100 p-6">
               <h2 className="font-semibold text-sage-900 mb-4">{t('admin.recentUsers')}</h2>
               {stats?.recentUsers?.length > 0 ? (
                 <div className="space-y-3">
@@ -118,6 +112,5 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
-    </>
   );
 }

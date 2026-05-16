@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../i18n/LanguageContext';
-import Navbar from '../../components/Navbar';
 import { Zap, Clock, Check, X } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -41,9 +40,7 @@ export default function AdminNegotiations() {
   };
 
   return (
-    <>
-      <Navbar />
-      <div className="min-h-screen bg-earth-50">
+      <div className="min-h-screen bg-sage-50/30 pt-16 md:pt-18">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center gap-3 mb-6">
             <Zap className="w-6 h-6 text-sage-600" />
@@ -69,7 +66,7 @@ export default function AdminNegotiations() {
               <div className="w-10 h-10 border-3 border-sage-200 border-t-sage-600 rounded-full animate-spin" />
             </div>
           ) : (
-            <div className="bg-white rounded-2xl border border-sage-100 overflow-hidden">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-sage-100 overflow-hidden">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-sage-100 bg-sage-50">
@@ -114,6 +111,5 @@ export default function AdminNegotiations() {
           )}
         </div>
       </div>
-    </>
   );
 }

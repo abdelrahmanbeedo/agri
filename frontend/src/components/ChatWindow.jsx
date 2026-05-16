@@ -133,7 +133,7 @@ export default function ChatWindow({ conversation, currentUser, onMessageSent })
                   className={`max-w-[75%] px-4 py-3 rounded-2xl ${
                     isOwn
                       ? "bg-sage-600 text-white rounded-br-md"
-                      : "bg-white border border-sage-100 text-sage-900 rounded-bl-md shadow-sm"
+                      : "bg-sage-50/70 border border-sage-100 text-sage-900 rounded-bl-md shadow-sm"
                   }`}
                 >
                   {!isOwn && (
@@ -158,7 +158,7 @@ export default function ChatWindow({ conversation, currentUser, onMessageSent })
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={handleSendMessage} className="p-4 border-t border-sage-100 bg-white">
+      <form onSubmit={handleSendMessage} className="p-4 border-t border-sage-100 bg-sage-50/30">
         <div className="flex items-center gap-3">
           <input
             ref={inputRef}
