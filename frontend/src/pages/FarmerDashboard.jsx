@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../i18n/LanguageContext";
 import Navbar from "../components/Navbar";
 import { Link } from "react-router-dom";
-import { Plus, Package, Trash2, ExternalLink, AlertCircle } from "lucide-react";
+import { Plus, Package, Trash2, ExternalLink, AlertCircle, ImageUp, X } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -26,6 +26,8 @@ export default function FarmerDashboard() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [formExpanded, setFormExpanded] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState([]);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   async function fetchProducts() {
     try {
@@ -72,6 +74,7 @@ export default function FarmerDashboard() {
           category: formData.category,
           unit: formData.unit,
           description: formData.description || "",
+          images: uploadedImages,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -87,6 +90,7 @@ export default function FarmerDashboard() {
         unit: "kg",
         description: "",
       });
+      setUploadedImages([]);
       setFormExpanded(false);
       setError("");
     } catch (err) {
@@ -237,10 +241,47 @@ export default function FarmerDashboard() {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-sage-700 mb-2">{t('upload.uploadImage')}</label>
+                  <div className="flex flex-wrap gap-3 mb-3">
+                    {uploadedImages.map((url, i) => (
+                      <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden border border-sage-200">
+                        <img src={url} alt="" className="w-full h-full object-cover" />
+                        <button type="button" onClick={() => setUploadedImages(uploadedImages.filter((_, j) => j !== i))}
+                          className="absolute top-0.5 right-0.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                    {uploadedImages.length < 5 && (
+                      <label className="w-20 h-20 border-2 border-dashed border-sage-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-sage-500 transition-colors">
+                        <ImageUp className="w-5 h-5 text-sage-400" />
+                        <span className="text-xs text-sage-400 mt-1">{t('upload.uploadImage')}</span>
+                        <input type="file" accept="image/*" className="hidden" disabled={uploadingImage}
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            setUploadingImage(true);
+                            const fd = new FormData();
+                            fd.append('image', file);
+                            try {
+                              const res = await axios.post(`${API_URL}/api/upload`, fd, {
+                                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+                              });
+                              setUploadedImages([...uploadedImages, res.data.url]);
+                            } catch { setError(t('upload.uploadFailed')); }
+                            finally { setUploadingImage(false); }
+                          }} />
+                      </label>
+                    )}
+                  </div>
+                  <p className="text-xs text-sage-400">{t('upload.maxSize')}</p>
+                </div>
+
                 <div className="flex gap-3 pt-2">
                   <button
                     type="button"
-                    onClick={() => setFormExpanded(false)}
+                    onClick={() => { setFormExpanded(false); setUploadedImages([]); }}
                     className="px-6 py-3 border border-sage-200 text-sage-700 rounded-xl font-medium hover:bg-sage-50 transition-colors"
                   >
                     {t('common.cancel')}

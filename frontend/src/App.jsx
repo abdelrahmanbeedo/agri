@@ -16,6 +16,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminNegotiations from "./pages/admin/AdminNegotiations";
+import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
@@ -73,6 +74,15 @@ export default function App() {
         element={
           <ProtectedRoute>
             <OrderDetail />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
           </ProtectedRoute>
         }
       />

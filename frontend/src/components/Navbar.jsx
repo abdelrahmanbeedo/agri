@@ -118,10 +118,10 @@ export default function Navbar() {
                   <Zap className="w-5 h-5" />
                 </Link>
                 <div className="flex items-center gap-3 ml-2 pl-4 border-l border-sage-200">
-                  <div className="flex items-center gap-2 text-sm text-sage-600">
+                  <Link to="/profile" className="flex items-center gap-2 text-sm text-sage-600 hover:text-sage-900 transition-colors">
                     <User className="w-4 h-4" />
                     <span className="hidden sm:inline">{user?.name}</span>
-                  </div>
+                  </Link>
                   <button
                     onClick={handleLogout}
                     className="p-2 text-sage-600 hover:text-sage-900 hover:bg-sage-50 rounded-lg transition-colors"

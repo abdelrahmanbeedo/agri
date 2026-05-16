@@ -6,7 +6,8 @@ import { useLanguage } from "../i18n/LanguageContext";
 import Navbar from "../components/Navbar";
 import PlaceOrderModal from "../components/PlaceOrderModal";
 import NegotiatePriceModal from "../components/NegotiatePriceModal";
-import { ArrowLeft, Package, User, MapPin, ShoppingCart, MessageCircle, BadgeDollarSign, Zap } from "lucide-react";
+import { ArrowLeft, Package, User, MapPin, ShoppingCart, MessageCircle, BadgeDollarSign, Zap, Star } from "lucide-react";
+import ReviewList from "../components/ReviewList";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -21,6 +22,8 @@ export default function ProductDetail() {
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [showNegotiateModal, setShowNegotiateModal] = useState(false);
   const [startingNegotiation, setStartingNegotiation] = useState(false);
+  const [reviews, setReviews] = useState([]);
+  const [reviewStats, setReviewStats] = useState({ avgRating: 0, count: 0 });
 
   useEffect(() => {
     async function fetchProduct() {
@@ -37,10 +40,20 @@ export default function ProductDetail() {
       }
     }
 
-    if (id) {
-      fetchProduct();
-    }
-  }, [id]);
+        if (id) {
+          fetchProduct();
+        }
+      }, [id]);
+
+      useEffect(() => {
+        if (!id) return;
+        axios.get(`${API_URL}/api/reviews/product/${id}`)
+          .then(res => {
+            setReviews(res.data.reviews);
+            setReviewStats(res.data.stats);
+          })
+          .catch(() => {});
+      }, [id]);
 
   async function handleContactFarmer() {
     if (!token) {
@@ -250,6 +263,19 @@ export default function ProductDetail() {
               </div>
             </div>
           </div>
+
+          {reviews.length > 0 && (
+            <div className="bg-white rounded-2xl border border-sage-100 p-6 mt-6">
+              <div className="flex items-center gap-3 mb-5">
+                <Star className="w-5 h-5 text-honey-500 fill-honey-500" />
+                <h2 className="font-semibold text-sage-900">{t('review.title')}</h2>
+                <span className="text-sm text-sage-500">
+                  ({reviewStats.count} {reviewStats.count === 1 ? t('review.oneReview') : t('review.multipleReviews')})
+                </span>
+              </div>
+              <ReviewList reviews={reviews} onDelete={() => {}} />
+            </div>
+          )}
 
           <PlaceOrderModal
             product={product}

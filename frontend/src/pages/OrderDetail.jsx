@@ -4,7 +4,8 @@ import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../i18n/LanguageContext";
 import Navbar from "../components/Navbar";
-import { ArrowLeft, Check, X, CreditCard, MapPin, User, Package } from "lucide-react";
+import { ArrowLeft, Check, X, CreditCard, MapPin, User, Package, Star } from "lucide-react";
+import ReviewForm from "../components/ReviewForm";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -23,6 +24,7 @@ export default function OrderDetail() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
 
   useEffect(() => {
     fetchOrder();
@@ -272,11 +274,27 @@ export default function OrderDetail() {
                     <CreditCard className="w-4 h-4" /> {t('orderDetail.createTransaction')}
                   </button>
                 )}
+                {order.status === "completed" && isBuyer && (
+                  <button
+                    onClick={() => setShowReviewForm(true)}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-honey-500 text-white rounded-xl font-medium hover:bg-honey-600 transition-colors"
+                  >
+                    <Star className="w-4 h-4" /> {t('review.leaveReview')}
+                  </button>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
+      {showReviewForm && order && (
+        <ReviewForm
+          productId={order.product_id?._id}
+          orderId={order._id}
+          onClose={() => setShowReviewForm(false)}
+          onSubmit={() => {}}
+        />
+      )}
     </>
   );
 }

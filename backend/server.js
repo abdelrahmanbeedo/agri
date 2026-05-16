@@ -10,6 +10,9 @@ import messageRoutes from "./routes/messageRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import negotiationRoutes from "./routes/negotiationRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import profileRoutes from "./routes/profileRoutes.js";
+import reviewRoutes from "./routes/reviewRoutes.js";
+import uploadRoutes from "./routes/uploadRoutes.js";
 
 dotenv.config();
 
@@ -62,13 +65,16 @@ app.use((req, res, next) => {
   if (req.params) { Object.keys(req.params).forEach(k => { const v = req.params[k]; delete req.params[k]; req.params[k.replace(/^\$/, '_').replace(/\./g, '_')] = mongoSanitize(v); }); }
   next();
 });
-app.use(express.json({ limit: '10kb' }));
+app.use(express.json({ limit: '5mb' }));
 app.use("/api/products", productRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/negotiations", negotiationRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/profile", profileRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/upload", uploadRoutes);
 
 import { requireAuth } from "./middleware/auth.js";
 app.get("/api/me", requireAuth, (req, res) => {
