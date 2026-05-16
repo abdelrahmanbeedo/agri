@@ -13,6 +13,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
+import Negotiation from "./models/Negotiation.js";
 
 dotenv.config();
 
@@ -86,6 +87,28 @@ const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/agri";
 mongoose.connect(MONGODB_URI)
   .then(() => {
     console.log("✅ Connected to MongoDB");
+
+    // Auto-expire stale negotiations every 60 seconds
+    setInterval(async () => {
+      try {
+        const expired = await Negotiation.find({
+          status: 'active',
+          expires_at: { $lte: new Date() }
+        });
+        for (const n of expired) {
+          n.status = 'expired';
+          n.closed_at = new Date();
+          n.closed_reason = 'expired';
+          await n.save();
+        }
+        if (expired.length > 0) {
+          console.log(`⏰ Auto-expired ${expired.length} negotiation(s)`);
+        }
+      } catch (err) {
+        console.error('Auto-expiry error:', err.message);
+      }
+    }, 60000);
+
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);

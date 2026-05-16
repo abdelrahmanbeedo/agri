@@ -317,6 +317,11 @@ export async function respondToOffer(req, res) {
       return res.status(404).json({ error: 'Negotiation not found' });
     }
 
+    const expired = await checkExpiry(negotiation);
+    if (expired) {
+      return res.status(400).json({ error: 'Negotiation session has expired' });
+    }
+
     const farmerId = negotiation.farmer_id?._id?.toString() || negotiation.farmer_id?.toString();
     
     if (farmerId !== userId) {
@@ -494,6 +499,10 @@ export async function getUserNegotiations(req, res) {
       .populate('product_id', 'title images category price_per_unit')
       .sort({ last_activity: -1 });
 
+    for (const n of negotiations) {
+      await checkExpiry(n);
+    }
+
     if (role === 'farmer') {
       negotiations = negotiations.filter(n => n.farmer_id._id.toString() === userId);
     } else if (role === 'trader') {
@@ -538,6 +547,11 @@ export async function closeNegotiation(req, res) {
 
     if (negotiation.farmer_id.toString() !== userId && negotiation.trader_id.toString() !== userId) {
       return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const expired = await checkExpiry(negotiation);
+    if (expired) {
+      return res.status(400).json({ error: 'Negotiation already expired' });
     }
 
     if (negotiation.status !== 'active') {
