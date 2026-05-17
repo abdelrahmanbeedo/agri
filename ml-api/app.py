@@ -25,7 +25,7 @@ DB_NAME = "agri"
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-client = MongoClient(MONGO_URI)
+client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=1000)
 db = client[DB_NAME]
 collection = db['classifications']
 
