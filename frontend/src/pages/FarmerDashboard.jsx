@@ -255,9 +255,10 @@ export default function FarmerDashboard() {
                           </div>
                         )}
                         {p.ai_grade_id && (
-                          <div className={`absolute top-0.5 left-0.5 w-4.5 h-4.5 rounded-full text-white text-[9px] font-bold flex items-center justify-center shadow-sm ${p.ai_grade_id.grade === "Grade A" ? "bg-emerald-500" : "bg-red-500"}`}
-                               title={`${p.ai_grade_id.grade} - ${p.ai_grade_id.fruit} (${(p.ai_grade_id.confidence * 100).toFixed(0)}%)`}>
-                            {p.ai_grade_id.grade === "Grade A" ? "A" : "C"}
+                          <div className={`absolute top-1 left-1 px-2 py-0.5 rounded-md text-white text-xs font-bold shadow-md flex items-center gap-1 ${p.ai_grade_id.grade === "Grade A" ? "bg-emerald-500" : "bg-red-500"}`}
+                               title={`${p.ai_grade_id.grade} — ${p.ai_grade_id.fruit} (${(p.ai_grade_id.confidence * 100).toFixed(0)}%)`}>
+                            <span>{p.ai_grade_id.grade === "Grade A" ? "A" : "C"}</span>
+                            <span className="opacity-80 font-normal">{p.ai_grade_id.grade === "Grade A" ? "Fresh" : "Rotten"}</span>
                           </div>
                         )}
                       </div>
