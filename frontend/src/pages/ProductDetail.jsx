@@ -122,10 +122,10 @@ export default function ProductDetail() {
               <div className="flex items-center gap-2 mb-4 flex-wrap">
                 <span className="badge badge-info">{product.category}</span>
                 {product.ai_grade && (
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold shadow-sm ${product.ai_grade.grade === "Grade A" ? "bg-emerald-500 text-white" : "bg-red-500 text-white"}`}
-                        title={`${(product.ai_grade.confidence * 100).toFixed(1)}% confidence`}>
-                    {product.ai_grade.grade === "Grade A" ? "A" : "C"}
-                    <span className="opacity-90 font-normal text-xs">{product.ai_grade.grade === "Grade A" ? "Fresh" : "Rotten"}</span>
+                  <span className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-lg text-base font-bold shadow-md ${product.ai_grade.grade === "Grade A" ? "bg-emerald-500 text-white" : "bg-red-500 text-white"}`}
+                        title={`${(product.ai_grade.confidence * 100).toFixed(1)}% confidence - ${product.ai_grade.fruit}`}>
+                    <span className="text-xl">{product.ai_grade.grade === "Grade A" ? "A" : "C"}</span>
+                    <span>{product.ai_grade.grade === "Grade A" ? "Fresh" : "Rotten"}</span>
                   </span>
                 )}
               </div>

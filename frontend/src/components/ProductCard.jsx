@@ -43,10 +43,10 @@ export default function ProductCard({ product }) {
             </span>
           )}
           {product.ai_grade && (
-            <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-lg text-xs font-bold shadow-md flex items-center gap-1.5 ${product.ai_grade.grade === "Grade A" ? "bg-emerald-500 text-white" : "bg-red-500 text-white"}`}
+            <div className={`absolute top-3 right-3 px-3 py-1.5 rounded-lg text-sm font-bold shadow-lg flex items-center gap-1.5 border-2 border-white/30 ${product.ai_grade.grade === "Grade A" ? "bg-emerald-500 text-white" : "bg-red-500 text-white"}`}
                  title={`${product.ai_grade.grade} — ${product.ai_grade.fruit} (${(product.ai_grade.confidence * 100).toFixed(0)}%)`}>
-              <span className="text-sm">{product.ai_grade.grade === "Grade A" ? "A" : "C"}</span>
-              <span className="opacity-90 font-normal">{product.ai_grade.grade === "Grade A" ? "Fresh" : "Rotten"}</span>
+              <span className="text-lg">{product.ai_grade.grade === "Grade A" ? "A" : "C"}</span>
+              <span>{product.ai_grade.grade === "Grade A" ? "Fresh" : "Rotten"}</span>
             </div>
           )}
           {product.average_rating > 0 && (

@@ -51,6 +51,7 @@ export default function FarmerDashboard() {
       setError(t('farmer.priceQuantityPositive')); setLoading(false); return;
     }
     const firstGrade = uploadedImages.length > 0 ? imageGrades[uploadedImages[0]] : null;
+    console.log('[Product] Submitting with grade:', firstGrade);
     try {
       const res = await axios.post(`${API_URL}/api/products`, {
         title: formData.title, price_per_unit: Number(formData.price_per_unit),
@@ -169,8 +170,10 @@ export default function FarmerDashboard() {
                       <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200 group/image">
                         <img src={url} alt="" className="w-full h-full object-cover" />
                         {grade && (
-                          <div className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center shadow-sm ${grade.grade === "Grade A" ? "bg-emerald-500" : "bg-red-500"}`}>
-                            {grade.grade === "Grade A" ? "A" : "C"}
+                          <div className={`absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black/10 ${grade.grade === "Grade A" ? "" : ""}`}>
+                            <span className={`px-1.5 py-0.5 rounded-md text-white text-[10px] font-bold shadow-lg ${grade.grade === "Grade A" ? "bg-emerald-500" : "bg-red-500"}`}>
+                              {grade.grade === "Grade A" ? "A" : "C"}
+                            </span>
                           </div>
                         )}
                         <button type="button" onClick={() => { setUploadedImages(uploadedImages.filter((_, j) => j !== i)); const g = {...imageGrades}; delete g[url]; setImageGrades(g); }}
@@ -202,6 +205,7 @@ export default function FarmerDashboard() {
                               const gradeRes = await axios.post(`${ML_API_URL}/predict`, gradeFd, {
                                 headers: { 'Content-Type': 'multipart/form-data' }
                               });
+                              console.log('[Grade] ML API result:', gradeRes.data);
                               setImageGrades(prev => ({ ...prev, [imgUrl]: gradeRes.data }));
                             } catch { /* grading non-blocking */ }
                             finally { setGradingImage(false); }
@@ -254,17 +258,16 @@ export default function FarmerDashboard() {
                             <Package className="w-6 h-6 text-sage-300" />
                           </div>
                         )}
-                        {p.ai_grade && (
-                          <div className={`absolute top-1 left-1 px-2 py-0.5 rounded-md text-white text-xs font-bold shadow-md flex items-center gap-1 ${p.ai_grade.grade === "Grade A" ? "bg-emerald-500" : "bg-red-500"}`}
-                               title={`${p.ai_grade.grade} — ${p.ai_grade.fruit} (${(p.ai_grade.confidence * 100).toFixed(0)}%)`}>
-                            <span>{p.ai_grade.grade === "Grade A" ? "A" : "C"}</span>
-                            <span className="opacity-80 font-normal">{p.ai_grade.grade === "Grade A" ? "Fresh" : "Rotten"}</span>
-                          </div>
-                        )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2.5 mb-1">
                           <h3 className="font-semibold text-gray-900 truncate">{p.title}</h3>
+                          {p.ai_grade && (
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-white text-xs font-bold shadow-sm ${p.ai_grade.grade === "Grade A" ? "bg-emerald-500" : "bg-red-500"}`}
+                                  title={`${(p.ai_grade.confidence * 100).toFixed(0)}% confidence`}>
+                              {p.ai_grade.grade === "Grade A" ? "A" : "C"} {p.ai_grade.grade === "Grade A" ? "Fresh" : "Rotten"}
+                            </span>
+                          )}
                           <span className={`badge ${p.status === "active" ? "badge-success" : "badge-neutral"}`}>{p.status}</span>
                         </div>
                         <p className="text-sm text-gray-400">{p.category}</p>
