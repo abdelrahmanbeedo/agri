@@ -4,4 +4,4 @@ pymongo
 tflite-runtime
 Pillow
 gunicorn
-numpy
+numpy<2

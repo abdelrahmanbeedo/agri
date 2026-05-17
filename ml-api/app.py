@@ -73,9 +73,19 @@ def load_model():
     print("TFLite model loaded and ready.")
     return interpreter
 
-interpreter = load_model()
-input_details = interpreter.get_input_details()
-output_details = interpreter.get_output_details()
+interpreter = None
+input_details = None
+output_details = None
+
+try:
+    interpreter = load_model()
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
+except Exception as e:
+    print(f"FATAL: Failed to load model: {e}")
+    print("The /predict endpoint will return errors until this is fixed.")
+    import traceback
+    traceback.print_exc()
 
 @app.route('/predict', methods=['POST'])
 def predict():
