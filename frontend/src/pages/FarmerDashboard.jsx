@@ -56,7 +56,7 @@ export default function FarmerDashboard() {
         title: formData.title, price_per_unit: Number(formData.price_per_unit),
         quantity: Number(formData.quantity), category: formData.category,
         unit: formData.unit, description: formData.description || "", images: uploadedImages,
-        ai_grade_id: firstGrade?._id || null,
+        ai_grade: firstGrade ? { grade: firstGrade.grade, fruit: firstGrade.fruit, confidence: firstGrade.confidence } : null,
       }, { headers: { Authorization: `Bearer ${token}` } });
       setProducts([res.data, ...products]);
       setFormData({ title: "", price_per_unit: "", quantity: "", category: "", unit: "kg", description: "" });
@@ -254,11 +254,11 @@ export default function FarmerDashboard() {
                             <Package className="w-6 h-6 text-sage-300" />
                           </div>
                         )}
-                        {p.ai_grade_id && (
-                          <div className={`absolute top-1 left-1 px-2 py-0.5 rounded-md text-white text-xs font-bold shadow-md flex items-center gap-1 ${p.ai_grade_id.grade === "Grade A" ? "bg-emerald-500" : "bg-red-500"}`}
-                               title={`${p.ai_grade_id.grade} — ${p.ai_grade_id.fruit} (${(p.ai_grade_id.confidence * 100).toFixed(0)}%)`}>
-                            <span>{p.ai_grade_id.grade === "Grade A" ? "A" : "C"}</span>
-                            <span className="opacity-80 font-normal">{p.ai_grade_id.grade === "Grade A" ? "Fresh" : "Rotten"}</span>
+                        {p.ai_grade && (
+                          <div className={`absolute top-1 left-1 px-2 py-0.5 rounded-md text-white text-xs font-bold shadow-md flex items-center gap-1 ${p.ai_grade.grade === "Grade A" ? "bg-emerald-500" : "bg-red-500"}`}
+                               title={`${p.ai_grade.grade} — ${p.ai_grade.fruit} (${(p.ai_grade.confidence * 100).toFixed(0)}%)`}>
+                            <span>{p.ai_grade.grade === "Grade A" ? "A" : "C"}</span>
+                            <span className="opacity-80 font-normal">{p.ai_grade.grade === "Grade A" ? "Fresh" : "Rotten"}</span>
                           </div>
                         )}
                       </div>

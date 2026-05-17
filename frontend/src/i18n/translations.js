@@ -152,6 +152,8 @@ const translations = {
     productDetail: {
       back: 'Back',
       noImage: 'No image',
+      active: 'Active',
+      inactive: 'Inactive',
       available: 'Available',
       totalValue: 'Total Value',
       description: 'Description',
@@ -593,6 +595,8 @@ const translations = {
     productDetail: {
       back: 'رجوع',
       noImage: 'لا توجد صورة',
+      active: 'نشط',
+      inactive: 'غير نشط',
       available: 'متوفر',
       totalValue: 'القيمة الإجمالية',
       description: 'الوصف',

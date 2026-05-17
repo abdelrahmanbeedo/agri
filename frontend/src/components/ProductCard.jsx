@@ -42,15 +42,15 @@ export default function ProductCard({ product }) {
               {product.category}
             </span>
           )}
-          {product.ai_grade_id && (
-            <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-lg text-xs font-bold shadow-md flex items-center gap-1.5 ${product.ai_grade_id.grade === "Grade A" ? "bg-emerald-500 text-white" : "bg-red-500 text-white"}`}
-                 title={`${product.ai_grade_id.grade} — ${product.ai_grade_id.fruit} (${(product.ai_grade_id.confidence * 100).toFixed(0)}%)`}>
-              <span className="text-sm">{product.ai_grade_id.grade === "Grade A" ? "A" : "C"}</span>
-              <span className="opacity-90 font-normal">{product.ai_grade_id.grade === "Grade A" ? "Fresh" : "Rotten"}</span>
+          {product.ai_grade && (
+            <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-lg text-xs font-bold shadow-md flex items-center gap-1.5 ${product.ai_grade.grade === "Grade A" ? "bg-emerald-500 text-white" : "bg-red-500 text-white"}`}
+                 title={`${product.ai_grade.grade} — ${product.ai_grade.fruit} (${(product.ai_grade.confidence * 100).toFixed(0)}%)`}>
+              <span className="text-sm">{product.ai_grade.grade === "Grade A" ? "A" : "C"}</span>
+              <span className="opacity-90 font-normal">{product.ai_grade.grade === "Grade A" ? "Fresh" : "Rotten"}</span>
             </div>
           )}
           {product.average_rating > 0 && (
-            <span className={`absolute px-2 py-1 bg-white/90 backdrop-blur-sm text-xs font-medium text-gray-700 rounded-lg shadow-sm flex items-center gap-1 ${product.ai_grade_id ? "bottom-3 right-3" : "top-3 right-3"}`}>
+            <span className={`absolute px-2 py-1 bg-white/90 backdrop-blur-sm text-xs font-medium text-gray-700 rounded-lg shadow-sm flex items-center gap-1 ${product.ai_grade ? "bottom-3 right-3" : "top-3 right-3"}`}>
               <Star className="w-3 h-3 text-honey-500 fill-honey-500" />
               {product.average_rating.toFixed(1)}
             </span>

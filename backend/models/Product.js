@@ -35,9 +35,12 @@ const productSchema = new mongoose.Schema(
       default: null,
     },
 
-    ai_grade_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Aigrade",
+    ai_grade: {
+      type: {
+        grade: { type: String, enum: ["Grade A", "Grade C"] },
+        fruit: String,
+        confidence: Number,
+      },
       default: null,
     },
 
