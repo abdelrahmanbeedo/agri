@@ -1,128 +1,142 @@
-
 import os
-import torch
-import torch.nn as nn
-import torchvision.models as models
-import torchvision.transforms as transforms
+import re
+import numpy as np
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from PIL import Image
 import io
-import datetime
+from datetime import datetime, timezone
 from pymongo import MongoClient
 from werkzeug.utils import secure_filename
 import uuid
 
+try:
+    import tflite_runtime.interpreter as tflite
+except ImportError:
+    from tensorflow import lite as tflite
+
 app = Flask(__name__)
 CORS(app)
 
-# Configuration
-MODEL_PATH = "banana_model.pth"
-NUM_CLASSES = 4
-CLASS_NAMES = ['Raw_Banana', 'Raw_Mango', 'Ripe_Banana', 'Ripe_Mango']
+MODEL_PATH = "fruit_grader.tflite"
 UPLOAD_FOLDER = 'uploads'
 MONGO_URI = "mongodb://localhost:27017/"
 DB_NAME = "agri"
 
-# Ensure upload folder exists
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# MongoDB Setup
 client = MongoClient(MONGO_URI)
 db = client[DB_NAME]
 collection = db['classifications']
 
-# Load Model
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"Using device: {device}")
+RAW_CLASSES = [
+    'freshapples', 'freshbanana', 'freshbittergroud', 'freshcapsicum',
+    'freshcucumber', 'freshokra', 'freshoranges', 'freshpatato',
+    'freshpotato', 'freshtamto', 'freshtomato',
+    'rottenapples', 'rottenbanana', 'rottenbittergroud', 'rottencapsicum',
+    'rottencucumber', 'rottenokra', 'rottenoranges', 'rottenpatato',
+    'rottenpotato', 'rottentamto', 'rottentomato',
+]
+
+def clean_and_grade(raw):
+    name = re.sub(r'^\d+', '', raw).strip()
+    n = name.lower()
+    if 'fresh' in n:
+        fruit = name[name.lower().find('fresh') + 5:].title()
+        return 'Grade A', f'Fresh {fruit}'
+    if 'rotten' in n:
+        fruit = name[name.lower().find('rotten') + 6:].title()
+        return 'Grade C', f'Rotten {fruit}'
+    return 'Grade B', name.title()
+
+GRADES = []
+FRUITS = []
+DISPLAY = []
+for r in RAW_CLASSES:
+    g, f = clean_and_grade(r)
+    GRADES.append(g)
+    FRUITS.append(f)
+    DISPLAY.append(f'{g} - {f}')
+
+INPUT_SIZE = (224, 224)
 
 def load_model():
-    print("Loading model...")
-    try:
-        from torchvision.models import ResNet18_Weights
-        model = models.resnet18(weights=None)
-    except ImportError:
-        model = models.resnet18(pretrained=False)
+    print("Loading TFLite fruit grader...")
+    if not os.path.exists(MODEL_PATH):
+        raise FileNotFoundError(f"Model file '{MODEL_PATH}' not found.")
+    interpreter = tflite.Interpreter(model_path=MODEL_PATH)
+    interpreter.allocate_tensors()
+    dummy = np.zeros((1, INPUT_SIZE[0], INPUT_SIZE[1], 3), dtype='float32')
+    input_details = interpreter.get_input_details()
+    interpreter.set_tensor(input_details[0]['index'], dummy)
+    interpreter.invoke()
+    print("TFLite model loaded and ready.")
+    return interpreter
 
-    num_ftrs = model.fc.in_features
-    model.fc = nn.Linear(num_ftrs, NUM_CLASSES)
-    
-    if os.path.exists(MODEL_PATH):
-        model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
-        print("Model weights loaded successfully.")
-    else:
-        print(f"WARNING: Model file '{MODEL_PATH}' not found. Predictions will be random.")
-
-    model.to(device)
-    model.eval()
-    return model
-
-model = load_model()
-
-# Preprocessing
-transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-])
+interpreter = load_model()
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
 
 @app.route('/predict', methods=['POST'])
 def predict():
     if 'image' not in request.files:
         return jsonify({'error': 'No image file provided'}), 400
-    
+
     file = request.files['image']
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
 
     try:
-        # Save image locally
         filename = secure_filename(file.filename)
         unique_filename = f"{uuid.uuid4().hex}_{filename}"
         file_path = os.path.join(UPLOAD_FOLDER, unique_filename)
-        
-        # Read file for processing (in memory)
+
         image_bytes = file.read()
         image = Image.open(io.BytesIO(image_bytes)).convert('RGB')
-        
-        # Save to disk
         image.save(file_path)
 
-        # Preprocess
-        tensor = transform(image).unsqueeze(0).to(device)
+        img_resized = np.array(image.resize(INPUT_SIZE)).astype('float32')
+        interpreter.set_tensor(input_details[0]['index'], np.expand_dims(img_resized, 0))
+        interpreter.invoke()
+        probs = interpreter.get_tensor(output_details[0]['index'])[0]
 
-        # Inference
-        with torch.no_grad():
-            outputs = model(tensor)
-            probabilities = torch.nn.functional.softmax(outputs, dim=1)[0]
-        
-        # Format results
-        results = {
-            class_name: float(prob) 
-            for class_name, prob in zip(CLASS_NAMES, probabilities)
-        }
-        
-        # Get top prediction
-        top_prob, top_idx = torch.max(probabilities, 0)
-        predicted_class = CLASS_NAMES[top_idx.item()]
-        confidence = float(top_prob)
+        top_idx = int(np.argmax(probs))
+        grade = GRADES[top_idx]
+        fruit = FRUITS[top_idx]
+        confidence = float(probs[top_idx])
 
-        # Save to MongoDB
+        grade_conf = {}
+        for i, g in enumerate(GRADES):
+            grade_conf[g] = grade_conf.get(g, 0.0) + float(probs[i])
+
+        sorted_indices = np.argsort(probs)[::-1]
+        top5 = {DISPLAY[i]: float(probs[i]) for i in sorted_indices[:5]}
+
         record = {
-            "filename": unique_filename, # Store filename, easy to serve
+            "filename": unique_filename,
             "original_name": filename,
-            "prediction": predicted_class,
+            "prediction": RAW_CLASSES[top_idx],
+            "fruit": fruit,
+            "grade": grade,
             "confidence": confidence,
-            "probabilities": results,
-            "timestamp": datetime.datetime.utcnow()
+            "grade_confidence": grade_conf,
+            "probabilities": top5,
+            "timestamp": datetime.now(timezone.utc)
         }
-        inserted_id = collection.insert_one(record).inserted_id
+        try:
+            inserted_id = str(collection.insert_one(record).inserted_id)
+        except Exception as db_err:
+            print(f"Warning: could not save to MongoDB: {db_err}")
+            inserted_id = None
 
         return jsonify({
-            'id': str(inserted_id),
-            'prediction': predicted_class,
+            'id': inserted_id,
+            'prediction': RAW_CLASSES[top_idx],
+            'grade': grade,
+            'fruit': fruit,
             'confidence': confidence,
-            'probabilities': results,
+            'grade_confidence': grade_conf,
+            'probabilities': top5,
             'image_url': f"http://localhost:8000/uploads/{unique_filename}"
         })
 
@@ -133,7 +147,6 @@ def predict():
 @app.route('/history', methods=['GET'])
 def get_history():
     try:
-        # Fetch last 50 records, sorted by newest first
         cursor = collection.find().sort("timestamp", -1).limit(50)
         history = []
         for doc in cursor:
@@ -141,8 +154,8 @@ def get_history():
             doc['image_url'] = f"http://localhost:8000/uploads/{doc.get('filename')}"
             history.append(doc)
         return jsonify(history)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    except Exception:
+        return jsonify([])
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):

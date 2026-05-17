@@ -15,7 +15,6 @@ const BananaClassifier = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Handle file drop
   const onDrop = useCallback((acceptedFiles) => {
     const selectedFile = acceptedFiles[0];
     if (selectedFile) {
@@ -36,7 +35,6 @@ const BananaClassifier = () => {
 
   const [history, setHistory] = useState([]);
 
-  // Fetch history
   const fetchHistory = useCallback(async () => {
     try {
       const response = await axios.get(`${ML_API_URL}/history`);
@@ -46,12 +44,10 @@ const BananaClassifier = () => {
     }
   }, []);
 
-  // Load history on mount
   React.useEffect(() => {
     fetchHistory();
   }, [fetchHistory]);
 
-  // Handle classification
   const handleClassify = async () => {
     if (!file) return;
 
@@ -65,7 +61,7 @@ const BananaClassifier = () => {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setResult(response.data);
-      fetchHistory(); // Refresh history after new classification
+      fetchHistory();
     } catch (err) {
       console.error("Error classifying image:", err);
       setError(t('bananaClassifier.failedClassify'));
@@ -81,20 +77,18 @@ const BananaClassifier = () => {
     setError(null);
   };
 
-  // Helper to format class names (e.g., "Ripe_Banana" -> "Ripe Banana")
-  const formatClass = (name) => name.replace(/_/g, " ");
-
-  // Helper for progress bar color
   const getProgressColor = (score) => {
     if (score > 0.7) return "bg-green-500";
     if (score > 0.4) return "bg-yellow-400";
     return "bg-red-400";
   };
 
+  const isGradeA = result?.grade === "Grade A";
+
   return (
     <div className="min-h-screen bg-sage-50/30 flex flex-col items-center py-12 px-4 sm:px-6 lg:px-8" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="max-w-3xl w-full space-y-8 bg-white/80 backdrop-blur-sm p-10 rounded-2xl shadow-lg border border-sage-100">
-        
+
         {/* Header */}
         <div className="text-center">
           <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">
@@ -122,7 +116,6 @@ const BananaClassifier = () => {
           </div>
         ) : (
           <div className="flex flex-col items-center space-y-6">
-            {/* Image Preview */}
             <div className="relative group">
               <img
                 src={preview}
@@ -138,7 +131,6 @@ const BananaClassifier = () => {
               </button>
             </div>
 
-            {/* Action Buttons */}
             {!result && !loading && (
               <button
                 onClick={handleClassify}
@@ -148,7 +140,6 @@ const BananaClassifier = () => {
               </button>
             )}
 
-            {/* Loading State */}
             {loading && (
               <div className="flex items-center space-x-3 text-green-600">
                 <FaSpinner className="animate-spin text-2xl" />
@@ -156,7 +147,6 @@ const BananaClassifier = () => {
               </div>
             )}
 
-            {/* Error Message */}
             {error && (
               <div className="w-full bg-red-50 text-red-600 p-4 rounded-lg border border-red-200 text-center">
                 {error}
@@ -171,39 +161,69 @@ const BananaClassifier = () => {
             <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
               {t('bananaClassifier.predictionResult')}
             </h2>
-            
-            <div className="flex flex-col md:flex-row items-center justify-center space-y-6 md:space-y-0 md:space-x-12">
-              {/* Top Prediction */}
+
+            <div className="flex flex-col items-center space-y-6">
+              {/* Grade Badge */}
               <div className="text-center">
-                <div className="text-sm text-gray-500 uppercase tracking-wide font-semibold mb-1">
-                  {t('bananaClassifier.identifiedAs')}
+                <div className={`inline-flex items-center justify-center w-28 h-28 rounded-full text-white text-6xl font-extrabold shadow-lg ${isGradeA ? 'bg-emerald-500' : 'bg-red-500'}`}>
+                  {result.grade === "Grade A" ? "A" : "C"}
                 </div>
-                <div className="text-5xl font-extrabold text-green-600">
-                  {formatClass(result.prediction)}
+                <div className="mt-4">
+                  <span className="text-2xl font-bold text-gray-800">{result.fruit}</span>
                 </div>
-                <div className="text-lg text-gray-600 mt-2 font-medium">
+                <div className="text-lg text-gray-600 mt-1 font-medium">
                   {t('bananaClassifier.confidence')} {(result.confidence * 100).toFixed(1)}%
                 </div>
               </div>
 
-              {/* Probability Bars */}
-              <div className="w-full max-w-md space-y-4">
-                {Object.entries(result.probabilities)
-                  .sort(([, a], [, b]) => b - a) // Sort by probability descending
-                  .map(([className, prob]) => (
-                    <div key={className}>
-                      <div className="flex justify-between text-sm font-medium text-gray-700 mb-1">
-                        <span>{formatClass(className)}</span>
-                        <span>{(prob * 100).toFixed(1)}%</span>
+              {/* Overall Grade Verdict */}
+              <div className="w-full max-w-md pt-4">
+                <h3 className="text-base font-semibold text-gray-700 mb-3 text-center">
+                  {t('bananaClassifier.overallGrade')}
+                </h3>
+                <div className="space-y-3">
+                  {Object.entries(result.grade_confidence || {})
+                    .sort(([, a], [, b]) => b - a)
+                    .map(([g, conf]) => (
+                      <div key={g}>
+                        <div className="flex justify-between text-sm font-medium text-gray-700 mb-1">
+                          <span>{g === "Grade A" ? t('bananaClassifier.gradeA') : t('bananaClassifier.gradeC')}</span>
+                          <span>{(conf * 100).toFixed(1)}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-4">
+                          <div
+                            className={`h-4 rounded-full transition-all duration-1000 ease-out ${g === "Grade A" ? "bg-emerald-400" : "bg-red-400"}`}
+                            style={{ width: `${conf * 100}%` }}
+                          ></div>
+                        </div>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div
-                          className={`h-3 rounded-full transition-all duration-1000 ease-out ${getProgressColor(prob)}`}
-                          style={{ width: `${prob * 100}%` }}
-                        ></div>
+                    ))}
+                </div>
+              </div>
+
+              {/* Top Predictions */}
+              <div className="w-full max-w-md pt-2">
+                <h3 className="text-base font-semibold text-gray-700 mb-3 text-center">
+                  {t('bananaClassifier.topPredictions')}
+                </h3>
+                <div className="space-y-2">
+                  {Object.entries(result.probabilities)
+                    .slice(0, 5)
+                    .map(([className, prob]) => (
+                      <div key={className}>
+                        <div className="flex justify-between text-sm font-medium text-gray-700 mb-1">
+                          <span>{className}</span>
+                          <span>{(prob * 100).toFixed(1)}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2.5">
+                          <div
+                            className={`h-2.5 rounded-full transition-all duration-1000 ease-out ${getProgressColor(prob)}`}
+                            style={{ width: `${prob * 100}%` }}
+                          ></div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                </div>
               </div>
             </div>
 
@@ -226,13 +246,19 @@ const BananaClassifier = () => {
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4">
               {history.map((item) => (
                 <div key={item._id} className="bg-sage-50/60 rounded-lg p-2 border border-sage-100 hover:shadow-md transition">
-                  <img 
-                    src={item.image_url} 
-                    alt={item.prediction} 
+                  <img
+                    src={item.image_url}
+                    alt={item.prediction}
                     className="w-full h-32 object-cover rounded-md mb-2"
                   />
                   <div className="text-center">
-                    <p className="font-semibold text-sm text-gray-800 truncate">{formatClass(item.prediction)}</p>
+                    <p className="font-semibold text-sm text-gray-800 truncate">
+                      {item.grade ? (
+                        <><span className={`inline-block w-5 h-5 rounded-full text-white text-xs font-bold leading-5 mr-1 ${item.grade === "Grade A" ? "bg-emerald-500" : "bg-red-500"}`}>{item.grade === "Grade A" ? "A" : "C"}</span> {item.fruit || item.prediction}</>
+                      ) : (
+                        item.prediction
+                      )}
+                    </p>
                     <p className="text-xs text-gray-500">{(item.confidence * 100).toFixed(0)}% {t('bananaClassifier.confAbbr')}</p>
                   </div>
                 </div>
