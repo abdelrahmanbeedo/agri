@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { Plus, Package, Trash2, ExternalLink, AlertCircle, ImageUp, X, TrendingUp, DollarSign, BarChart3, Eye } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const ML_API_URL = import.meta.env.VITE_ML_API_URL || "http://localhost:8000";
 const CATEGORIES = ["Vegetables", "Fruits", "Grains", "Dairy", "Livestock", "Other"];
 const UNITS = ["kg", "ton", "crate", "piece", "bag", "liter", "dozen"];
 
@@ -21,6 +22,8 @@ export default function FarmerDashboard() {
   const [formExpanded, setFormExpanded] = useState(false);
   const [uploadedImages, setUploadedImages] = useState([]);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageGrades, setImageGrades] = useState({});
+  const [gradingImage, setGradingImage] = useState(false);
 
   async function fetchProducts() {
     try {
@@ -47,15 +50,17 @@ export default function FarmerDashboard() {
     if (Number(formData.price_per_unit) <= 0 || Number(formData.quantity) <= 0) {
       setError(t('farmer.priceQuantityPositive')); setLoading(false); return;
     }
+    const firstGrade = uploadedImages.length > 0 ? imageGrades[uploadedImages[0]] : null;
     try {
       const res = await axios.post(`${API_URL}/api/products`, {
         title: formData.title, price_per_unit: Number(formData.price_per_unit),
         quantity: Number(formData.quantity), category: formData.category,
         unit: formData.unit, description: formData.description || "", images: uploadedImages,
+        ai_grade_id: firstGrade?._id || null,
       }, { headers: { Authorization: `Bearer ${token}` } });
       setProducts([res.data, ...products]);
       setFormData({ title: "", price_per_unit: "", quantity: "", category: "", unit: "kg", description: "" });
-      setUploadedImages([]); setFormExpanded(false); setError("");
+      setUploadedImages([]); setImageGrades({}); setFormExpanded(false); setError("");
     } catch (err) {
       setError(err.response?.data?.msg || t('farmer.createError'));
     } finally { setLoading(false); }
@@ -158,20 +163,28 @@ export default function FarmerDashboard() {
               <div>
                 <label className="label">{t('upload.uploadImage')}</label>
                 <div className="flex flex-wrap gap-3 mb-2">
-                  {uploadedImages.map((url, i) => (
-                    <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200 group/image">
-                      <img src={url} alt="" className="w-full h-full object-cover" />
-                      <button type="button" onClick={() => setUploadedImages(uploadedImages.filter((_, j) => j !== i))}
-                        className="absolute inset-0 bg-black/40 opacity-0 group-hover/image:opacity-100 transition-opacity flex items-center justify-center">
-                        <X className="w-5 h-5 text-white" />
-                      </button>
-                    </div>
-                  ))}
+                  {uploadedImages.map((url, i) => {
+                    const grade = imageGrades[url];
+                    return (
+                      <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200 group/image">
+                        <img src={url} alt="" className="w-full h-full object-cover" />
+                        {grade && (
+                          <div className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center shadow-sm ${grade.grade === "Grade A" ? "bg-emerald-500" : "bg-red-500"}`}>
+                            {grade.grade === "Grade A" ? "A" : "C"}
+                          </div>
+                        )}
+                        <button type="button" onClick={() => { setUploadedImages(uploadedImages.filter((_, j) => j !== i)); const g = {...imageGrades}; delete g[url]; setImageGrades(g); }}
+                          className="absolute inset-0 bg-black/40 opacity-0 group-hover/image:opacity-100 transition-opacity flex items-center justify-center">
+                          <X className="w-5 h-5 text-white" />
+                        </button>
+                      </div>
+                    );
+                  })}
                   {uploadedImages.length < 5 && (
                     <label className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-sage-400 hover:bg-sage-50/30 transition-all duration-200">
                       <ImageUp className="w-5 h-5 text-gray-400" />
                       <span className="text-xs text-gray-400 mt-1">{uploadingImage ? '...' : t('upload.uploadImage')}</span>
-                      <input type="file" accept="image/*" className="hidden" disabled={uploadingImage}
+                      <input type="file" accept="image/*" className="hidden" disabled={uploadingImage || gradingImage}
                         onChange={async (e) => {
                           const file = e.target.files?.[0]; if (!file) return;
                           setUploadingImage(true);
@@ -180,9 +193,20 @@ export default function FarmerDashboard() {
                             const res = await axios.post(`${API_URL}/api/upload`, fd, {
                               headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
                             });
-                            setUploadedImages([...uploadedImages, res.data.url]);
+                            const imgUrl = res.data.url;
+                            setUploadedImages([...uploadedImages, imgUrl]);
+                            setUploadingImage(false);
+                            setGradingImage(true);
+                            try {
+                              const gradeFd = new FormData(); gradeFd.append('image', file);
+                              const gradeRes = await axios.post(`${ML_API_URL}/predict`, gradeFd, {
+                                headers: { 'Content-Type': 'multipart/form-data' }
+                              });
+                              setImageGrades(prev => ({ ...prev, [imgUrl]: gradeRes.data }));
+                            } catch { /* grading non-blocking */ }
+                            finally { setGradingImage(false); }
                           } catch { setError(t('upload.uploadFailed')); }
-                          finally { setUploadingImage(false); }
+                          finally { if (uploadingImage) setUploadingImage(false); }
                         }} />
                     </label>
                   )}
@@ -190,7 +214,7 @@ export default function FarmerDashboard() {
                 <p className="text-xs text-gray-400">{t('upload.maxSize')}</p>
               </div>
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => { setFormExpanded(false); setUploadedImages([]); }}
+                <button type="button" onClick={() => { setFormExpanded(false); setUploadedImages([]); setImageGrades({}); }}
                   className="btn btn-secondary">{t('common.cancel')}</button>
                 <button type="submit" disabled={loading} className="btn btn-primary">
                   {loading ? <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> {t('farmer.adding')}</span> : t('farmer.addProduct')}
@@ -222,12 +246,18 @@ export default function FarmerDashboard() {
                 <div key={p._id} className="p-5 hover:bg-sage-50/40 transition-colors animate-fadeIn" style={{ animationDelay: `${i * 50}ms` }}>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                     <div className="flex items-start gap-4 flex-1 min-w-0">
-                      <div className="w-16 h-16 bg-sage-50 rounded-xl overflow-hidden shrink-0 border border-sage-100">
+                      <div className="w-16 h-16 bg-sage-50 rounded-xl overflow-hidden shrink-0 border border-sage-100 relative">
                         {p.images && p.images.length > 0 ? (
                           <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
                             <Package className="w-6 h-6 text-sage-300" />
+                          </div>
+                        )}
+                        {p.ai_grade_id && (
+                          <div className={`absolute top-0.5 left-0.5 w-4.5 h-4.5 rounded-full text-white text-[9px] font-bold flex items-center justify-center shadow-sm ${p.ai_grade_id.grade === "Grade A" ? "bg-emerald-500" : "bg-red-500"}`}
+                               title={`${p.ai_grade_id.grade} - ${p.ai_grade_id.fruit} (${(p.ai_grade_id.confidence * 100).toFixed(0)}%)`}>
+                            {p.ai_grade_id.grade === "Grade A" ? "A" : "C"}
                           </div>
                         )}
                       </div>

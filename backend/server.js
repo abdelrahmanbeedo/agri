@@ -13,6 +13,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
+import gradeRoutes from "./routes/gradeRoutes.js";
 import Negotiation from "./models/Negotiation.js";
 
 dotenv.config();
@@ -76,6 +77,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/grade", gradeRoutes);
 
 import { requireAuth } from "./middleware/auth.js";
 app.get("/api/me", requireAuth, (req, res) => {

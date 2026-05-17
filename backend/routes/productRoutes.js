@@ -7,7 +7,7 @@ const router = express.Router();
 // Create product
 router.post("/", requireAuth, async (req, res) => {
   try {
-    const { title, price_per_unit, quantity, description, category, unit, images, video } = req.body;
+    const { title, price_per_unit, quantity, description, category, unit, images, video, ai_grade_id } = req.body;
 
     // Validation
     if (!title || !price_per_unit || !quantity || !category || !unit) {
@@ -30,10 +30,14 @@ router.post("/", requireAuth, async (req, res) => {
       images: images || [],
       video: video || null,
       status: "active",
+      ai_grade_id: ai_grade_id || null,
     });
 
     await product.save();
     await product.populate("farmer_id", "name email");
+    if (product.ai_grade_id) {
+      await product.populate("ai_grade_id");
+    }
 
     res.status(201).json(product);
   } catch (err) {
@@ -51,6 +55,7 @@ router.get("/my-products", requireAuth, async (req, res) => {
 
     const products = await Product.find({ farmer_id: req.user.id })
       .populate("farmer_id", "name email")
+      .populate("ai_grade_id")
       .sort({ created_at: -1 });
     
     res.json(products);
@@ -65,6 +70,7 @@ router.get("/", async (req, res) => {
   try {
     const products = await Product.find({ status: "active" })
       .populate("farmer_id", "name email")
+      .populate("ai_grade_id")
       .sort({ created_at: -1 });
     
     res.json(products);
@@ -78,7 +84,8 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
-      .populate("farmer_id", "name email");
+      .populate("farmer_id", "name email")
+      .populate("ai_grade_id");
     
     if (!product) {
       return res.status(404).json({ msg: "Product not found" });
