@@ -2,7 +2,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Leaf, MessageSquare, LogOut, User, Zap, Globe, Menu, X, LayoutDashboard, ShoppingBag, Scale, Home } from "lucide-react";
+import { Leaf, MessageSquare, LogOut, User, Zap, Globe, Menu, X, LayoutDashboard, ShoppingBag, Scale, Home, ShoppingCart } from "lucide-react";
 import { useLanguage } from "../i18n/LanguageContext";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -83,15 +83,15 @@ export default function Navbar() {
 
   const mobileLinks = isLoggedIn ? (
     <>
-      <Link to={user?.role === "farmer" ? "/farmer" : "/trader"} className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-sage-50 rounded-xl transition-colors">
+      <Link to={user?.role === "farmer" ? "/farmer" : "/trader"} className="flex items-center gap-3 px-4 py-3.5 text-base font-medium text-gray-700 hover:bg-sage-50 rounded-xl transition-colors">
         <LayoutDashboard className="w-5 h-5 text-sage-500" />
         {language === "en" ? "Dashboard" : "لوحة التحكم"}
       </Link>
-      <Link to="/orders" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-sage-50 rounded-xl transition-colors">
+      <Link to="/orders" className="flex items-center gap-3 px-4 py-3.5 text-base font-medium text-gray-700 hover:bg-sage-50 rounded-xl transition-colors">
         <ShoppingBag className="w-5 h-5 text-sage-500" />
         {language === "en" ? "Orders" : "الطلبات"}
       </Link>
-      <Link to="/messages" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-sage-50 rounded-xl transition-colors">
+      <Link to="/messages" className="flex items-center gap-3 px-4 py-3.5 text-base font-medium text-gray-700 hover:bg-sage-50 rounded-xl transition-colors">
         <MessageSquare className="w-5 h-5 text-sage-500" />
         {language === "en" ? "Messages" : "الرسائل"}
         {unreadCount > 0 && (
@@ -100,34 +100,60 @@ export default function Navbar() {
           </span>
         )}
       </Link>
-      <Link to="/negotiations" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-sage-50 rounded-xl transition-colors">
-        <Scale className="w-5 h-5 text-sage-500" />
-        {language === "en" ? "Negotiations" : "التفاوض"}
-      </Link>
-      <Link to="/profile" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-sage-50 rounded-xl transition-colors">
+      <Link to="/profile" className="flex items-center gap-3 px-4 py-3.5 text-base font-medium text-gray-700 hover:bg-sage-50 rounded-xl transition-colors">
         <User className="w-5 h-5 text-sage-500" />
         {language === "en" ? "Profile" : "الملف الشخصي"}
       </Link>
-      <Link to="/classify" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-sage-50 rounded-xl transition-colors">
+      <hr className="my-2 border-gray-100" />
+      <Link to="/negotiations" className="flex items-center gap-3 px-4 py-3.5 text-base font-medium text-gray-700 hover:bg-sage-50 rounded-xl transition-colors">
+        <Scale className="w-5 h-5 text-sage-500" />
+        {language === "en" ? "Negotiations" : "التفاوض"}
+      </Link>
+      <Link to="/classify" className="flex items-center gap-3 px-4 py-3.5 text-base font-medium text-gray-700 hover:bg-sage-50 rounded-xl transition-colors">
         <Zap className="w-5 h-5 text-sage-500" />
-        {language === "en" ? "Classifier" : "المصنف"}
+        {language === "en" ? "AI Classifier" : "المصنف"}
       </Link>
       <hr className="my-2 border-gray-100" />
-      <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors w-full text-left">
+      <button onClick={toggleLanguage} className="flex items-center gap-3 px-4 py-3.5 text-base font-medium text-gray-700 hover:bg-sage-50 rounded-xl transition-colors w-full text-left">
+        <Globe className="w-5 h-5 text-sage-500" />
+        {language === 'en' ? 'العربية' : 'English'}
+      </button>
+      <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3.5 text-base font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors w-full text-left">
         <LogOut className="w-5 h-5" />
         {language === "en" ? "Sign out" : "تسجيل الخروج"}
       </button>
     </>
   ) : (
     <>
-      <Link to="/login" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-sage-50 rounded-xl transition-colors">
+      <Link to="/login" className="flex items-center gap-3 px-4 py-3.5 text-base font-medium text-gray-700 hover:bg-sage-50 rounded-xl transition-colors">
         {language === "en" ? "Sign in" : "تسجيل الدخول"}
       </Link>
-      <Link to="/register" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-white bg-sage-600 hover:bg-sage-700 rounded-xl transition-colors text-center justify-center">
+      <Link to="/register" className="flex items-center gap-3 px-4 py-3.5 text-base font-medium text-white bg-sage-600 hover:bg-sage-700 rounded-xl transition-colors text-center justify-center">
         {language === "en" ? "Get started" : "ابدأ الآن"}
       </Link>
     </>
   );
+
+  // Bottom tab items
+  const getTabItems = () => {
+    if (!isLoggedIn) return [];
+    const role = user?.role;
+    const tabs = [];
+    if (role === "farmer") {
+      tabs.push({ to: "/farmer", icon: LayoutDashboard, label: language === "en" ? "Dashboard" : "الرئيسية" });
+    } else if (role === "trader") {
+      tabs.push({ to: "/trader", icon: Home, label: language === "en" ? "Browse" : "تصفح" });
+    } else {
+      tabs.push({ to: "/admin", icon: LayoutDashboard, label: "Admin" });
+    }
+    tabs.push({ to: "/orders", icon: ShoppingBag, label: language === "en" ? "Orders" : "الطلبات" });
+    tabs.push({
+      to: "/messages", icon: MessageSquare, label: language === "en" ? "Messages" : "الرسائل",
+      badge: unreadCount,
+    });
+    tabs.push({ to: "/profile", icon: User, label: language === "en" ? "Profile" : "الحساب" });
+    return tabs;
+  };
 
   return (
     <>
@@ -209,7 +235,7 @@ export default function Navbar() {
               className="md:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-sage-50 rounded-lg transition-all"
               aria-label="Toggle menu"
             >
-              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
@@ -223,7 +249,7 @@ export default function Navbar() {
       )}
 
       {/* Mobile drawer */}
-      <div className={`fixed top-0 right-0 z-50 h-full w-72 max-w-[85vw] bg-white shadow-xl md:hidden transform transition-transform duration-300 ${
+      <div className={`fixed top-0 right-0 z-50 h-full w-80 max-w-[85vw] bg-white shadow-xl md:hidden transform transition-transform duration-300 ${
         mobileOpen ? "translate-x-0" : "translate-x-full"
       }`}>
         <div className="flex items-center justify-between p-4 border-b border-gray-100">
@@ -239,33 +265,46 @@ export default function Navbar() {
         </div>
         <div className="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-5rem)]">
           {isLoggedIn && (
-            <div className="flex items-center gap-3 px-4 py-3 mb-2 bg-sage-50 rounded-xl">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-sage-400 to-sage-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+            <div className="flex items-center gap-3 px-4 py-4 mb-3 bg-sage-50 rounded-xl">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sage-400 to-sage-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
                 {user?.name?.charAt(0).toUpperCase() || 'U'}
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">{user?.name}</p>
-                <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
+                <p className="text-base font-semibold text-gray-900 truncate">{user?.name}</p>
+                <p className="text-sm text-gray-500 capitalize">{user?.role}</p>
               </div>
             </div>
           )}
           {!isLoggedIn && (
-            <Link to="/" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-sage-50 rounded-xl transition-colors">
+            <Link to="/" className="flex items-center gap-3 px-4 py-3.5 text-base font-medium text-gray-700 hover:bg-sage-50 rounded-xl transition-colors">
               <Home className="w-5 h-5 text-sage-500" />
               {language === "en" ? "Home" : "الرئيسية"}
             </Link>
           )}
           {mobileLinks}
-          <hr className="my-2 border-gray-100" />
-          <button
-            onClick={toggleLanguage}
-            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-sage-50 rounded-xl transition-colors w-full text-left"
-          >
-            <Globe className="w-5 h-5 text-sage-500" />
-            {language === 'en' ? 'Switch to العربية' : 'Switch to English'}
-          </button>
         </div>
       </div>
+
+      {/* Mobile bottom tab bar */}
+      {isLoggedIn && (
+        <nav className="mobile-bottom-nav md:hidden" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+          {getTabItems().map((tab, i) => (
+            <Link
+              key={i}
+              to={tab.to}
+              className={isActive(tab.to) ? "active-nav" : ""}
+            >
+              <tab.icon className={isActive(tab.to) ? "" : ""} />
+              <span className="nav-label">{tab.label}</span>
+              {tab.badge > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 bg-honey-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1 shadow-sm">
+                  {tab.badge > 9 ? '9+' : tab.badge}
+                </span>
+              )}
+            </Link>
+          ))}
+        </nav>
+      )}
     </>
   );
 }

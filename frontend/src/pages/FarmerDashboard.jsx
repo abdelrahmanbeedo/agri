@@ -11,7 +11,7 @@ const CATEGORIES = ["Vegetables", "Fruits", "Grains", "Dairy", "Livestock", "Oth
 const UNITS = ["kg", "ton", "crate", "piece", "bag", "liter", "dozen"];
 
 export default function FarmerDashboard() {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   const { token } = useAuth();
   const [products, setProducts] = useState([]);
   const [formData, setFormData] = useState({
@@ -115,11 +115,11 @@ export default function FarmerDashboard() {
 
         {/* Product Form */}
         {formExpanded && (
-          <div className="card p-6 mb-8 animate-slideDown">
-            <h2 className="text-lg font-semibold text-gray-900 mb-6">{t('farmer.addNewProduct')}</h2>
+          <div className="card p-5 sm:p-6 mb-8 animate-slideDown">
+            <h2 className="text-xl font-semibold text-gray-900 mb-5">{t('farmer.addNewProduct')}</h2>
             {error && (
-              <div className="mb-5 p-3.5 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+              <div className="mb-4 p-3.5 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm flex items-start gap-2.5">
+                <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
@@ -129,12 +129,12 @@ export default function FarmerDashboard() {
                 <input type="text" placeholder={t('farmer.titlePlaceholder')} className="input" value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })} required />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="label">{t('farmer.pricePerUnitEGP')} <span className="text-red-400">*</span></label>
-                  <input type="number" step="0.01" min="0" placeholder={t('farmer.pricePlaceholder')} className="input"
-                    value={formData.price_per_unit} onChange={(e) => setFormData({ ...formData, price_per_unit: e.target.value })} required />
-                </div>
+              <div>
+                <label className="label">{t('farmer.pricePerUnitEGP')} <span className="text-red-400">*</span></label>
+                <input type="number" step="0.01" min="0" placeholder={t('farmer.pricePlaceholder')} className="input"
+                  value={formData.price_per_unit} onChange={(e) => setFormData({ ...formData, price_per_unit: e.target.value })} required />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="label">{t('farmer.quantity')} <span className="text-red-400">*</span></label>
                   <input type="number" min="1" placeholder={t('farmer.quantityPlaceholder')} className="input"
@@ -156,71 +156,73 @@ export default function FarmerDashboard() {
                   {CATEGORIES.map(cat => (<option key={cat} value={cat}>{cat}</option>))}
                 </select>
               </div>
-              <div>
-                <label className="label">{t('farmer.description')}</label>
-                <textarea placeholder={t('farmer.descriptionPlaceholder')} rows="3" className="input resize-none"
-                  value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
-              </div>
-              <div>
-                <label className="label">{t('upload.uploadImage')}</label>
-                <div className="flex flex-wrap gap-3 mb-2">
-                  {uploadedImages.map((url, i) => {
-                    const grade = imageGrades[url];
-                    return (
-                      <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200 group/image">
-                        <img src={url} alt="" className="w-full h-full object-cover" />
-                        {grade && (
-                          <div className={`absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black/10 ${grade.grade === "Grade A" ? "" : ""}`}>
-                            <span className={`px-1.5 py-0.5 rounded-md text-white text-[10px] font-bold shadow-lg ${grade.grade === "Grade A" ? "bg-emerald-500" : "bg-red-500"}`}>
-                              {grade.grade === "Grade A" ? "A" : "C"}
-                            </span>
+              <details className="group">
+                <summary className="text-sm font-medium text-sage-600 cursor-pointer py-2 select-none list-none flex items-center gap-1.5">
+                  <span className="group-open:rotate-90 transition-transform text-lg">▶</span>
+                  {language === 'en' ? 'Add description & photo (optional)' : 'إضافة وصف وصورة (اختياري)'}
+                </summary>
+                <div className="mt-4 space-y-4">
+                  <div>
+                    <textarea placeholder={t('farmer.descriptionPlaceholder')} rows="3" className="input resize-none"
+                      value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
+                  </div>
+                  <div>
+                    <div className="flex flex-wrap gap-3 mb-2">
+                      {uploadedImages.map((url, i) => {
+                        const grade = imageGrades[url];
+                        return (
+                          <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200">
+                            <img src={url} alt="" className="w-full h-full object-cover" />
+                            {grade && (
+                              <span className={`absolute top-1 left-1 px-1.5 py-0.5 rounded-md text-white text-[10px] font-bold shadow-lg ${grade.grade === "Grade A" ? "bg-emerald-500" : "bg-red-500"}`}>
+                                {grade.grade === "Grade A" ? "A" : "C"}
+                              </span>
+                            )}
+                            <button type="button" onClick={() => { setUploadedImages(uploadedImages.filter((_, j) => j !== i)); const g = {...imageGrades}; delete g[url]; setImageGrades(g); }}
+                              className="absolute top-1 right-1 w-6 h-6 bg-black/50 rounded-full flex items-center justify-center text-white">
+                              <X className="w-3.5 h-3.5" />
+                            </button>
                           </div>
-                        )}
-                        <button type="button" onClick={() => { setUploadedImages(uploadedImages.filter((_, j) => j !== i)); const g = {...imageGrades}; delete g[url]; setImageGrades(g); }}
-                          className="absolute inset-0 bg-black/40 opacity-0 group-hover/image:opacity-100 transition-opacity flex items-center justify-center">
-                          <X className="w-5 h-5 text-white" />
-                        </button>
-                      </div>
-                    );
-                  })}
-                  {uploadedImages.length < 5 && (
-                    <label className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-sage-400 hover:bg-sage-50/30 transition-all duration-200">
-                      <ImageUp className="w-5 h-5 text-gray-400" />
-                      <span className="text-xs text-gray-400 mt-1">{uploadingImage ? '...' : t('upload.uploadImage')}</span>
-                      <input type="file" accept="image/*" className="hidden" disabled={uploadingImage || gradingImage}
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0]; if (!file) return;
-                          setUploadingImage(true);
-                          const fd = new FormData(); fd.append('image', file);
-                          try {
-                            const res = await axios.post(`${API_URL}/api/upload`, fd, {
-                              headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
-                            });
-                            const imgUrl = res.data.url;
-                            setUploadedImages([...uploadedImages, imgUrl]);
-                            setUploadingImage(false);
-                            setGradingImage(true);
-                            try {
-                              const gradeFd = new FormData(); gradeFd.append('image', file);
-                              const gradeRes = await axios.post(`${ML_API_URL}/predict`, gradeFd, {
-                                headers: { 'Content-Type': 'multipart/form-data' }
-                              });
-                              console.log('[Grade] ML API result:', gradeRes.data);
-                              setImageGrades(prev => ({ ...prev, [imgUrl]: gradeRes.data }));
-                            } catch { /* grading non-blocking */ }
-                            finally { setGradingImage(false); }
-                          } catch { setError(t('upload.uploadFailed')); }
-                          finally { if (uploadingImage) setUploadingImage(false); }
-                        }} />
-                    </label>
-                  )}
+                        );
+                      })}
+                      {uploadedImages.length < 5 && (
+                        <label className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-sage-400 transition-colors">
+                          <ImageUp className="w-5 h-5 text-gray-400" />
+                          <span className="text-[10px] text-gray-400 mt-1">{uploadingImage ? '...' : t('upload.uploadImage')}</span>
+                          <input type="file" accept="image/*" className="hidden" disabled={uploadingImage || gradingImage}
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0]; if (!file) return;
+                              setUploadingImage(true);
+                              const fd = new FormData(); fd.append('image', file);
+                              try {
+                                const res = await axios.post(`${API_URL}/api/upload`, fd, {
+                                  headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+                                });
+                                const imgUrl = res.data.url;
+                                setUploadedImages([...uploadedImages, imgUrl]);
+                                setUploadingImage(false);
+                                setGradingImage(true);
+                                try {
+                                  const gradeFd = new FormData(); gradeFd.append('image', file);
+                                  const gradeRes = await axios.post(`${ML_API_URL}/predict`, gradeFd, {
+                                    headers: { 'Content-Type': 'multipart/form-data' }
+                                  });
+                                  console.log('[Grade] ML API result:', gradeRes.data);
+                                  setImageGrades(prev => ({ ...prev, [imgUrl]: gradeRes.data }));
+                                } catch {} finally { setGradingImage(false); }
+                              } catch { setError(t('upload.uploadFailed')); }
+                              finally { if (uploadingImage) setUploadingImage(false); }
+                            }} />
+                        </label>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <p className="text-xs text-gray-400">{t('upload.maxSize')}</p>
-              </div>
+              </details>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => { setFormExpanded(false); setUploadedImages([]); setImageGrades({}); }}
-                  className="btn btn-secondary">{t('common.cancel')}</button>
-                <button type="submit" disabled={loading} className="btn btn-primary">
+                  className="btn btn-secondary flex-1">{t('common.cancel')}</button>
+                <button type="submit" disabled={loading} className="btn btn-primary flex-1">
                   {loading ? <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> {t('farmer.adding')}</span> : t('farmer.addProduct')}
                 </button>
               </div>
