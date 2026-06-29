@@ -8,10 +8,13 @@ export const requireAuth = async (req, res, next) => {
     if (!token) return res.status(401).json({msg:"No token"});
     const decoded = jwt.verify(token, JWT_SECRET);
     const user = await User.findById(decoded.id).select("-password_hash");
+    if (!user) return res.status(401).json({ msg: "User not found" });
     req.user = { ...user.toObject(), id: user._id.toString() };
     next();
   } catch (err) {
-    res.status(401).json({msg:"Invalid token"});
+    if (err.name === "TokenExpiredError") return res.status(401).json({ msg: "Token expired" });
+    if (err.name === "JsonWebTokenError") return res.status(401).json({ msg: "Invalid token" });
+    res.status(401).json({ msg: "Authentication failed" });
   }
 };
 

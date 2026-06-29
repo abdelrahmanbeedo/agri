@@ -29,6 +29,7 @@ export default function NegotiationPage() {
   const [lastAnalysis, setLastAnalysis] = useState(null);
   const [nudge, setNudge] = useState(null);
   const [timeLeft, setTimeLeft] = useState(null);
+  const [error, setError] = useState(null);
 
   const [offerForm, setOfferForm] = useState({
     price_per_unit: '', quantity: '', delivery_date: '', payment_terms: 'cash', special_conditions: '', notes: ''
@@ -61,8 +62,10 @@ export default function NegotiationPage() {
       setMarketData(res.data.marketData);
       setLastAnalysis(res.data.lastOffer?.analysis);
       if (res.data.lastOffer && user?.id === res.data.negotiation?.farmer_id?._id) setShowOfferForm(false);
-    } catch (err) { console.error('Fetch negotiation error:', err); }
-    finally { setLoading(false); }
+    } catch (err) {
+      console.error('Fetch negotiation error:', err);
+      setError(err.response?.data?.msg || 'Failed to load negotiation');
+    } finally { setLoading(false); }
   }
 
   async function submitOffer(e) {
@@ -131,7 +134,13 @@ export default function NegotiationPage() {
 
   if (error) return (
     <div className="min-h-screen bg-sage-50/30 pt-16 md:pt-18 flex items-center justify-center">
-      <p className="text-gray-500">Negotiation not found</p>
+      <div className="text-center">
+        <p className="text-red-500 font-medium">{error}</p>
+        <button onClick={() => { setError(null); setLoading(true); fetchNegotiation(); }}
+          className="mt-4 text-sm text-sage-600 hover:text-sage-800 underline">
+          Retry
+        </button>
+      </div>
     </div>
   );
 
